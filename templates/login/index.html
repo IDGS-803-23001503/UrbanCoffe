@@ -1,11 +1,61 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Urban Coffee - Administración de Alto Nivel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    
+    <div class="split-screen-container">
+        <div class="background-side"></div>
+
+        <div class="login-panel">
+            <div class="glass-panel">
+                
+                <div class="card-header">
+                    <i class="fas fa-coffee fa-3x brand-icon"></i>
+                    <h1>URBAN COFFEE</h1>
+                    <h2>ADMINISTRACIÓN DEL SISTEMA</h2>
+                </div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="flash-alert flash-{{ category }}">
+                                <i class="fas fa-exclamation-triangle"></i> {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                <div class="card-body">
+                    <h3>Iniciar Sesión</h3>
+                    <form action="{{ url_for('login') }}" method="post">
+                        
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            <input type="text" name="username" placeholder="Usuario" required>
+                            <label>Usuario</label>
+                        </div>
+
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            <input type="password" name="password" placeholder="Contraseña" required>
+                            <label>Contraseña</label>
+                        </div>
+
+                        <button type="submit" class="btn-primary">INICIAR SESIÓN</button>
+                    </form>
+
+                    <div class="card-footer-links">
+                        <a href="#" class="link-secondary">¿Olvidaste tu contraseña?</a>
+                        <p class="text-mute">No tienes cuenta? <a href="#" class="link-accent">Regístrate</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

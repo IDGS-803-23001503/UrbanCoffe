@@ -1,0 +1,214 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-copper: #bf735a;
+    --primary-rich-brown: #5c3c2e;
+    --accent-cream: #f7f3ed;
+    --text-main: #333333;
+    --glass-blur: blur(25px);
+    --glass-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    color: var(--text-main);
+}
+
+.split-screen-container {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    background: url('https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=2000&auto=format&fit=crop') no-repeat center center/cover;
+}
+
+.background-side {
+    flex: 1;
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.login-panel {
+    flex: 0 0 450px;
+    background-color: rgba(25, 15, 10, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    z-index: 10;
+    box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+}
+
+.glass-panel {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: 12px;
+    box-shadow: var(--glass-shadow);
+    width: 100%;
+    max-width: 400px;
+    padding: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.card-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.brand-icon {
+    color: var(--primary-copper);
+    margin-bottom: 10px;
+}
+
+.card-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--primary-rich-brown);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+.card-header h2 {
+    font-size: 13px;
+    font-weight: 400;
+    color: rgba(92, 60, 46, 0.7);
+    margin-top: -5px;
+}
+
+.flash-alert {
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: rgba(254, 226, 226, 0.8);
+    backdrop-filter: blur(5px);
+}
+
+.flash-danger {
+    color: #991b1b;
+    border: 1px solid rgba(254, 202, 202, 0.6);
+}
+
+.card-body h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.input-group {
+    position: relative;
+    margin-bottom: 18px;
+}
+
+.input-group-text {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #aaa;
+    font-size: 16px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px 12px 12px 45px;
+    border: 1px solid rgba(221, 221, 221, 0.5);
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.2);
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.input-group input:focus {
+    border-color: var(--primary-copper);
+    outline: none;
+    background-color: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 0 0 3px rgba(191, 115, 90, 0.1);
+}
+
+.input-group label {
+    display: none;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 15px;
+    background-color: var(--primary-copper);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-rich-brown);
+}
+
+.card-footer-links {
+    text-align: center;
+    margin-top: 25px;
+    font-size: 13px;
+}
+
+.card-footer-links a {
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.link-secondary {
+    color: rgba(92, 60, 46, 0.7);
+    margin-bottom: 8px;
+    display: inline-block;
+}
+
+.link-secondary:hover {
+    color: var(--primary-rich-brown);
+}
+
+.text-mute {
+    color: #aaa;
+}
+
+.link-accent {
+    color: var(--primary-rich-brown);
+    font-weight: 600;
+}
+
+.link-accent:hover {
+    text-decoration: underline;
+    color: var(--primary-copper);
+}
+
+@media (max-width: 768px) {
+    .split-screen-container {
+        flex-direction: column-reverse;
+    }
+    .background-side {
+        flex: 0 0 150px;
+    }
+    .login-panel {
+        flex: 1;
+        align-items: flex-end;
+        padding: 10px;
+    }
+    .glass-panel {
+        margin-bottom: 20px;
+        border-radius: 20px 20px 0 0;
+    }
+}
