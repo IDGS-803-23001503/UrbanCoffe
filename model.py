@@ -41,7 +41,7 @@ class Usuario(db.Model):
 
         return True
 
-    def registrarIntentoFallido(self, maxIntentos: int = 3, minutosBloqueo: int = 15) -> None:
+    def registrarIntentoFallido(self, maxIntentos: int = 4, minutosBloqueo: int = 15) -> None:
         self.intentosFallidos += 1
 
         if self.intentosFallidos >= maxIntentos:
@@ -53,3 +53,16 @@ class Usuario(db.Model):
         self.intentosFallidos = 0
         self.cuentaBloqueada = False
         self.bloqueoHasta = None
+
+
+class RegistroSesion(db.Model):
+    __tablename__ = "registros_sesion"
+
+    id = db.Column(db.Integer, primary_key=True)
+    usuarioId = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=False, index=True)
+    tokenSesion = db.Column(db.String(128), nullable=False, index=True)
+    direccionIp = db.Column(db.String(64), nullable=True)
+    agenteUsuario = db.Column(db.String(255), nullable=True)
+    fechaInicio = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    fechaFin = db.Column(db.DateTime(timezone=True), nullable=True)
+    activa = db.Column(db.Boolean, nullable=False, default=True)
