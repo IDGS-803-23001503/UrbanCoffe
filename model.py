@@ -6,48 +6,50 @@ from werkzeug.security import check_password_hash, generate_password_hash
 db = SQLAlchemy()
 
 
-class User(db.Model):
-	__tablename__ = "usuarios"
+class Usuario(db.Model):
+    __tablename__ = "usuarios"
 
-	id = db.Column(db.Integer, primary_key=True)
-	correo = db.Column(db.String(120), unique=True, nullable=False, index=True)
-	password_hash = db.Column(db.String(255), nullable=False)
-	rol = db.Column(db.String(20), nullable=False)
-	intentos_fallidos = db.Column(db.Integer, nullable=False, default=0)
-	cuenta_bloqueada = db.Column(db.Boolean, nullable=False, default=False)
-	bloqueo_hasta = db.Column(db.DateTime(timezone=True), nullable=True)
-	creado_en = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(120), nullable=False)
+    correo = db.Column(db.String(120), unique=True, nullable=False, index=True)
+    contrasenaHash = db.Column("password_hash", db.String(255), nullable=False)
+    rol = db.Column(db.String(20), nullable=False)
+    estado = db.Column(db.String(20), nullable=False, default="Activo")
+    intentosFallidos = db.Column("intentos_fallidos", db.Integer, nullable=False, default=0)
+    cuentaBloqueada = db.Column("cuenta_bloqueada", db.Boolean, nullable=False, default=False)
+    bloqueoHasta = db.Column("bloqueo_hasta", db.DateTime(timezone=True), nullable=True)
+    creadoEn = db.Column("creado_en", db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
-	def set_password(self, password: str) -> None:
-		# Se usa hash irreversible para que la contraseña nunca quede expuesta en texto plano,
-		# incluso si la base de datos fuera comprometida.
-		self.password_hash = generate_password_hash(password)
+    def establecerContrasena(self, contrasena: str) -> None:
+        # Se usa hash irreversible para que la contraseña nunca quede expuesta en texto plano,
+        # incluso si la base de datos fuera comprometida.
+        self.contrasenaHash = generate_password_hash(contrasena)
 
-	def check_password(self, password: str) -> bool:
-		return check_password_hash(self.password_hash, password)
+    def validarContrasena(self, contrasena: str) -> bool:
+        return check_password_hash(self.contrasenaHash, contrasena)
 
-	def esta_bloqueada(self) -> bool:
-		if not self.cuenta_bloqueada:
-			return False
+    def estaBloqueada(self) -> bool:
+        if not self.cuentaBloqueada:
+            return False
 
-		now = datetime.now(timezone.utc)
-		if self.bloqueo_hasta and now >= self.bloqueo_hasta:
-			self.cuenta_bloqueada = False
-			self.intentos_fallidos = 0
-			self.bloqueo_hasta = None
-			return False
+        ahora = datetime.now(timezone.utc)
+        if self.bloqueoHasta and ahora >= self.bloqueoHasta:
+            self.cuentaBloqueada = False
+            self.intentosFallidos = 0
+            self.bloqueoHasta = None
+            return False
 
-		return True
+        return True
 
-	def registrar_intento_fallido(self, max_intentos: int = 3, minutos_bloqueo: int = 15) -> None:
-		self.intentos_fallidos += 1
+    def registrarIntentoFallido(self, maxIntentos: int = 3, minutosBloqueo: int = 15) -> None:
+        self.intentosFallidos += 1
 
-		if self.intentos_fallidos >= max_intentos:
-			self.cuenta_bloqueada = True
-			# Bloqueo temporal para frenar ataques de fuerza bruta sin deshabilitar la cuenta de forma permanente.
-			self.bloqueo_hasta = datetime.now(timezone.utc) + timedelta(minutes=minutos_bloqueo)
+        if self.intentosFallidos >= maxIntentos:
+            self.cuentaBloqueada = True
+            # Bloqueo temporal para frenar ataques de fuerza bruta sin deshabilitar la cuenta de forma permanente.
+            self.bloqueoHasta = datetime.now(timezone.utc) + timedelta(minutes=minutosBloqueo)
 
-	def resetear_seguridad(self) -> None:
-		self.intentos_fallidos = 0
-		self.cuenta_bloqueada = False
-		self.bloqueo_hasta = None
+    def resetearSeguridad(self) -> None:
+        self.intentosFallidos = 0
+        self.cuentaBloqueada = False
+        self.bloqueoHasta = None

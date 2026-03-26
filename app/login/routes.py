@@ -1,100 +1,161 @@
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+from sqlalchemy import inspect, text
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from model import User, db
+from model import Usuario, db
 
-auth_bp = Blueprint("auth", __name__)
+authBp = Blueprint("auth", __name__)
 
-DUMMY_PASSWORD_HASH = generate_password_hash("urban-coffee-dummy-password")
+hashContrasenaSimulada = generate_password_hash("urban-coffee-dummy-password")
 
 
-def seed_default_users() -> None:
-	gerente = User.query.filter_by(correo="gerente@urbancoffee.com").first()
-	operador = User.query.filter_by(correo="operador@urbancoffee.com").first()
+def asegurarEsquemaUsuarios() -> None:
+	inspector = inspect(db.engine)
+	columnas = {columna["name"] for columna in inspector.get_columns("usuarios")}
+
+	sentenciasMigracion = []
+
+	if "nombre" not in columnas:
+		sentenciasMigracion.append("ALTER TABLE usuarios ADD COLUMN nombre VARCHAR(120) NOT NULL DEFAULT 'Sin nombre'")
+
+	if "estado" not in columnas:
+		sentenciasMigracion.append("ALTER TABLE usuarios ADD COLUMN estado VARCHAR(20) NOT NULL DEFAULT 'Activo'")
+
+	for sentencia in sentenciasMigracion:
+		db.session.execute(text(sentencia))
+
+	if sentenciasMigracion:
+		db.session.commit()
+
+
+def sembrarUsuariosBase() -> None:
+	gerente = Usuario.query.filter_by(correo="gerente@urbancoffee.com").first()
+	operador = Usuario.query.filter_by(correo="operador@urbancoffee.com").first()
 
 	if not gerente:
-		gerente = User(correo="gerente@urbancoffee.com", rol="Gerente")
-		gerente.set_password("Gerente#2026")
+		gerente = Usuario(correo="gerente@urbancoffee.com", nombre="Administrador", rol="Gerente", estado="Activo")
+		gerente.establecerContrasena("Gerente#2026")
 		db.session.add(gerente)
+	else:
+		gerente.nombre = gerente.nombre or "Administrador"
+		gerente.estado = gerente.estado or "Activo"
 
 	if not operador:
-		operador = User(correo="operador@urbancoffee.com", rol="Operador")
-		operador.set_password("Operador#2026")
+		operador = Usuario(correo="operador@urbancoffee.com", nombre="Operador", rol="Operador", estado="Activo")
+		operador.establecerContrasena("Operador#2026")
 		db.session.add(operador)
+	else:
+		operador.nombre = operador.nombre or "Operador"
+		operador.estado = operador.estado or "Activo"
 
 	db.session.commit()
 
 
-def init_auth_module(app) -> None:
+def iniciarModuloAuth(app) -> None:
 	with app.app_context():
 		db.create_all()
-		seed_default_users()
+		asegurarEsquemaUsuarios()
+		sembrarUsuariosBase()
 
 
-def user_is_authenticated() -> bool:
-	return bool(session.get("logged_in") and session.get("user_id"))
+def usuarioAutenticado() -> bool:
+	return bool(session.get("inicioSesion") and session.get("usuarioId"))
 
 
-def role_dashboard_endpoint(role: str) -> str:
-	role_map = {
+def endpointDashboardRol(rol: str) -> str:
+	mapaRoles = {
 		"Gerente": "dashboard_gerente",
 		"Operador": "dashboard_operador",
 	}
-	return role_map.get(role, "dashboard_operador")
+	return mapaRoles.get(rol, "dashboard_operador")
 
 
-@auth_bp.route("/login", methods=["GET", "POST"], endpoint="login")
-def login():
+@authBp.route("/login", methods=["GET", "POST"], endpoint="iniciarSesion")
+def iniciarSesion():
 	if request.method == "POST":
-		email = request.form.get("email", "").strip().lower()
-		password = request.form.get("password", "")
+		correo = request.form.get("correo", "").strip().lower()
+		contrasena = request.form.get("contrasena", "")
 
-		generic_error = "Usuario o contraseña incorrectos"
-		user = User.query.filter_by(correo=email).first()
+		errorGenerico = "Usuario o contraseña incorrectos"
+		usuario = Usuario.query.filter_by(correo=correo).first()
 
-		if not user:
-			check_password_hash(DUMMY_PASSWORD_HASH, password)
-			flash(generic_error, "danger")
+		if not usuario:
+			check_password_hash(hashContrasenaSimulada, contrasena)
+			flash(errorGenerico, "danger")
 			return render_template("login.html")
 
-		if user.esta_bloqueada():
+		if usuario.estado != "Activo":
+			check_password_hash(hashContrasenaSimulada, contrasena)
+			flash(errorGenerico, "danger")
+			return render_template("login.html")
+
+		if usuario.estaBloqueada():
 			db.session.commit()
 			flash("Cuenta bloqueada temporalmente.", "warning")
 			return render_template("login.html")
 
-		if not user.check_password(password):
-			user.registrar_intento_fallido(max_intentos=3, minutos_bloqueo=15)
+		if not usuario.validarContrasena(contrasena):
+			usuario.registrarIntentoFallido(maxIntentos=3, minutosBloqueo=15)
 			db.session.commit()
 
-			if user.cuenta_bloqueada:
+			if usuario.cuentaBloqueada:
 				flash("Cuenta bloqueada temporalmente.", "warning")
 			else:
-				flash(generic_error, "danger")
+				flash(errorGenerico, "danger")
 
 			return render_template("login.html")
 
-		user.resetear_seguridad()
+		usuario.resetearSeguridad()
 		db.session.commit()
 
 		session.clear()
 		session.permanent = True
-		session["logged_in"] = True
-		session["user_id"] = user.id
-		session["user_email"] = user.correo
-		session["user_role"] = user.rol
+		session["inicioSesion"] = True
+		session["usuarioId"] = usuario.id
+		session["usuarioCorreo"] = usuario.correo
+		session["usuarioRol"] = usuario.rol
 
-		return redirect(url_for(role_dashboard_endpoint(user.rol)))
+		return redirect(url_for(endpointDashboardRol(usuario.rol)))
 
 	return render_template("login.html")
 
 
-@auth_bp.route("/forgot-password", endpoint="forgot_password")
-def forgot_password():
-	flash("Espera espera espera test.", "info")
-	return redirect(url_for("auth.login"))
+@authBp.route("/register", methods=["GET", "POST"], endpoint="registrarUsuario")
+def registrarUsuario():
+	if request.method == "POST":
+		nombre = request.form.get("nombre", "").strip()
+		correo = request.form.get("correo", "").strip().lower()
+		contrasena = request.form.get("contrasena", "")
+
+		if not nombre or not correo or not contrasena:
+			flash("Completa todos los campos requeridos.", "danger")
+			return render_template("register.html")
+
+		existe = Usuario.query.filter_by(correo=correo).first()
+		if existe:
+			flash("El correo ya está registrado.", "danger")
+			return render_template("register.html")
+
+		usuario = Usuario(nombre=nombre, correo=correo, rol="Operador", estado="Activo")
+		usuario.establecerContrasena(contrasena)
+		usuario.resetearSeguridad()
+
+		db.session.add(usuario)
+		db.session.commit()
+
+		flash("Registro completado. Ahora puedes iniciar sesión.", "success")
+		return redirect(url_for("auth.iniciarSesion"))
+
+	return render_template("register.html")
 
 
-@auth_bp.route("/logout", endpoint="logout")
-def logout():
+@authBp.route("/forgot-password", endpoint="recuperarContrasena")
+def recuperarContrasena():
+	flash("Jona wait wait todavia no lo acabo no me pegues.", "info")
+	return redirect(url_for("auth.iniciarSesion"))
+
+
+@authBp.route("/logout", endpoint="cerrarSesion")
+def cerrarSesion():
 	session.clear()
-	return redirect(url_for("auth.login"))
+	return redirect(url_for("auth.iniciarSesion"))
