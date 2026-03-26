@@ -33,7 +33,11 @@ class Usuario(db.Model):
             return False
 
         ahora = datetime.now(timezone.utc)
-        if self.bloqueoHasta and ahora >= self.bloqueoHasta:
+        bloqueoHastaNormalizado = self.bloqueoHasta
+        if bloqueoHastaNormalizado and bloqueoHastaNormalizado.tzinfo is None:
+            bloqueoHastaNormalizado = bloqueoHastaNormalizado.replace(tzinfo=timezone.utc)
+
+        if bloqueoHastaNormalizado and ahora >= bloqueoHastaNormalizado:
             self.cuentaBloqueada = False
             self.intentosFallidos = 0
             self.bloqueoHasta = None
