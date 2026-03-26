@@ -1,57 +1,63 @@
+from datetime import timedelta
 
-import os
+from flask import Flask, abort, redirect, render_template, request, session, url_for
+from sqlalchemy.exc import OperationalError
 
-from flask import Flask, flash, redirect, render_template, request, session, url_for
+from config import Config
+from app.login.routes import auth_bp, init_auth_module, role_dashboard_endpoint, user_is_authenticated
+from model import db
 
 app = Flask(__name__)
-app.secret_key = os.getenv("FLASK_SECRET_KEY", "urban-coffee-dev-secret-key")
+app.config.from_object(Config)
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=8)
 
-APP_USERNAME = os.getenv("APP_USERNAME", "admin")
-APP_PASSWORD = os.getenv("APP_PASSWORD", "admin123")
+db.init_app(app)
+app.register_blueprint(auth_bp)
+try:
+    init_auth_module(app)
+except OperationalError as exc:
+    raise RuntimeError(
+        "No fue posible conectar a MySQL."
+    ) from exc
 
 
 @app.before_request
 def require_login():
-    allowed_endpoints = {"login", "static"}
+    public_endpoints = {"auth.login", "auth.forgot_password", "index", "static"}
 
-    if request.endpoint in allowed_endpoints:
+    if request.endpoint in public_endpoints:
         return None
 
-    if not session.get("logged_in"):
-        return redirect(url_for("login"))
+    if not user_is_authenticated():
+        return redirect(url_for("auth.login"))
 
     return None
 
-@app.route('/')
+
+@app.route("/")
 def index():
-    return redirect(url_for('login'))
+    if user_is_authenticated():
+        endpoint = role_dashboard_endpoint(session.get("user_role", "Operador"))
+        return redirect(url_for(endpoint))
+    return redirect(url_for("auth.login"))
 
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form.get('username', '').strip()
-        password = request.form.get('password', '')
-
-        if username == APP_USERNAME and password == APP_PASSWORD:
-            session['logged_in'] = True
-            session['username'] = username
-            return redirect(url_for('dashboard'))
-
-        flash('Usuario o contraseña inválidos.', 'danger')
-
-    return render_template('login/index.html')
+@app.route("/dashboard/gerente")
+def dashboard_gerente():
+    if session.get("user_role") != "Gerente":
+        abort(403)
+    return render_template("dashboard/index.html")
 
 
-@app.route('/dashboard')
-def dashboard():
-    return render_template('dashboard/index.html')
+@app.route("/dashboard/operador")
+def dashboard_operador():
+    if session.get("user_role") not in {"Gerente", "Operador"}:
+        abort(403)
+    return render_template("dashboard/index.html")
 
 
-@app.route('/logout')
-def logout():
-    session.clear()
-    return redirect(url_for('login'))
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
