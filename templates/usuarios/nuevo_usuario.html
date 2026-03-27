@@ -7,11 +7,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-100">
     <main class="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
         <div class="mb-6 flex items-center justify-between">
             <h1 class="text-2xl font-bold text-gray-900">Nuevo usuario</h1>
-            <a href="{{ url_for('usuarios.index') }}" class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Volver</a>
+            <a href="{{ url_for('usuarios.index') }}" class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50">Volver</a>
         </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -28,22 +28,22 @@
             {% endif %}
         {% endwith %}
 
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
             <form method="POST" action="{{ url_for('usuarios.crear') }}" class="space-y-5">
                 <div>
                     <label for="nombre" class="mb-2 block text-sm font-semibold text-gray-700">Nombre</label>
-                    <input id="nombre" name="nombre" type="text" required class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-amber-500 focus:ring-amber-500" placeholder="Nombre completo" />
+                    <input id="nombre" name="nombre" type="text" required class="block w-full rounded-md border border-gray-300 bg-white p-2.5 text-sm text-gray-900 shadow-sm focus:border-slate-500 focus:ring-slate-500" placeholder="Nombre completo" />
                 </div>
 
                 <div>
                     <label for="correo" class="mb-2 block text-sm font-semibold text-gray-700">Correo (Usuario)</label>
-                    <input id="correo" name="correo" type="email" required class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-amber-500 focus:ring-amber-500" placeholder="usuario@urbancoffee.com" />
+                    <input id="correo" name="correo" type="email" required class="block w-full rounded-md border border-gray-300 bg-white p-2.5 text-sm text-gray-900 shadow-sm focus:border-slate-500 focus:ring-slate-500" placeholder="usuario@urbancoffee.com" />
                 </div>
 
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <label for="rol" class="mb-2 block text-sm font-semibold text-gray-700">Rol</label>
-                        <select id="rol" name="rol" required class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-amber-500 focus:ring-amber-500">
+                        <select id="rol" name="rol" required class="block w-full rounded-md border border-gray-300 bg-white p-2.5 text-sm text-gray-900 shadow-sm focus:border-slate-500 focus:ring-slate-500">
                             <option value="">Selecciona un rol</option>
                             <option value="Gerente">Gerente</option>
                             <option value="Operador">Operador</option>
@@ -52,7 +52,7 @@
 
                     <div>
                         <label for="estado" class="mb-2 block text-sm font-semibold text-gray-700">Estado</label>
-                        <select id="estado" name="estado" required class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-amber-500 focus:ring-amber-500">
+                        <select id="estado" name="estado" required class="block w-full rounded-md border border-gray-300 bg-white p-2.5 text-sm text-gray-900 shadow-sm focus:border-slate-500 focus:ring-slate-500">
                             <option value="Activo">Activo</option>
                             <option value="Inactivo">Inactivo</option>
                         </select>
@@ -61,10 +61,10 @@
 
                 <div>
                     <label for="contrasenaTemporal" class="mb-2 block text-sm font-semibold text-gray-700">Contraseña temporal</label>
-                    <input id="contrasenaTemporal" name="contrasenaTemporal" type="password" required class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-amber-500 focus:ring-amber-500" placeholder="Temporal#2026" />
+                    <input id="contrasenaTemporal" name="contrasenaTemporal" type="password" required class="block w-full rounded-md border border-gray-300 bg-white p-2.5 text-sm text-gray-900 shadow-sm focus:border-slate-500 focus:ring-slate-500" placeholder="Temporal#2026" />
                 </div>
 
-                <button type="submit" class="w-full rounded-lg bg-amber-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-amber-800 focus:outline-none focus:ring-4 focus:ring-amber-300">
+                <button type="submit" class="w-full rounded-md bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300">
                     Guardar usuario
                 </button>
             </form>

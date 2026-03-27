@@ -1,6 +1,7 @@
 from functools import wraps
 
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+from sqlalchemy import or_
 
 from model import Usuario, db
 
@@ -28,8 +29,26 @@ def requiereRol(rolRequerido: str):
 @usuariosBp.route("/", methods=["GET"], endpoint="index")
 @requiereRol("Gerente")
 def index():
-    listaUsuarios = Usuario.query.order_by(Usuario.creadoEn.desc()).all()
-    return render_template("usuarios/usuarios.html", usuarios=listaUsuarios)
+    terminoBusqueda = request.args.get("q", "").strip()
+
+    consultaUsuarios = Usuario.query
+    if terminoBusqueda:
+        patronBusqueda = f"%{terminoBusqueda}%"
+        consultaUsuarios = consultaUsuarios.filter(
+            or_(
+                Usuario.nombre.ilike(patronBusqueda),
+                Usuario.correo.ilike(patronBusqueda),
+                Usuario.rol.ilike(patronBusqueda),
+                Usuario.estado.ilike(patronBusqueda),
+            )
+        )
+
+    listaUsuarios = consultaUsuarios.order_by(Usuario.creadoEn.desc()).all()
+    return render_template(
+        "usuarios/usuarios.html",
+        usuarios=listaUsuarios,
+        terminoBusqueda=terminoBusqueda,
+    )
 
 
 @usuariosBp.route("/nuevo", methods=["GET"], endpoint="nuevo")
