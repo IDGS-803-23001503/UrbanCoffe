@@ -37,6 +37,7 @@ def index():
         consultaUsuarios = consultaUsuarios.filter(
             or_(
                 Usuario.nombre.ilike(patronBusqueda),
+                Usuario.usuario.ilike(patronBusqueda),
                 Usuario.correo.ilike(patronBusqueda),
                 Usuario.rol.ilike(patronBusqueda),
                 Usuario.estado.ilike(patronBusqueda),
@@ -61,13 +62,19 @@ def nuevo():
 @requiereRol("Gerente")
 def crear():
     nombre = request.form.get("nombre", "").strip()
+    usuarioLogin = request.form.get("usuario", "").strip().lower()
     correo = request.form.get("correo", "").strip().lower()
     rol = request.form.get("rol", "").strip()
     contrasenaTemporal = request.form.get("contrasenaTemporal", "")
     estado = request.form.get("estado", "").strip()
 
-    if not nombre or not correo or rol not in {"Gerente", "Operador"} or not contrasenaTemporal or estado not in {"Activo", "Inactivo"}:
+    if not nombre or not usuarioLogin or not correo or rol not in {"Gerente", "Operador"} or not contrasenaTemporal or estado not in {"Activo", "Inactivo"}:
         flash("Completa todos los campos requeridos correctamente.", "danger")
+        return redirect(url_for("usuarios.nuevo"))
+
+    existeUsuario = Usuario.query.filter_by(usuario=usuarioLogin).first()
+    if existeUsuario:
+        flash("El usuario ya está registrado.", "danger")
         return redirect(url_for("usuarios.nuevo"))
 
     existe = Usuario.query.filter_by(correo=correo).first()
@@ -75,7 +82,7 @@ def crear():
         flash("El correo ya está registrado.", "danger")
         return redirect(url_for("usuarios.nuevo"))
 
-    usuario = Usuario(nombre=nombre, correo=correo, rol=rol, estado=estado)
+    usuario = Usuario(nombre=nombre, usuario=usuarioLogin, correo=correo, rol=rol, estado=estado)
 
     usuario.establecerContrasena(contrasenaTemporal)
     usuario.resetearSeguridad()
@@ -100,13 +107,19 @@ def actualizar(idUsuario: int):
     usuario = Usuario.query.get_or_404(idUsuario)
 
     nombre = request.form.get("nombre", "").strip()
+    usuarioLogin = request.form.get("usuario", "").strip().lower()
     correo = request.form.get("correo", "").strip().lower()
     rol = request.form.get("rol", "").strip()
     estado = request.form.get("estado", "").strip()
     contrasenaTemporal = request.form.get("contrasenaTemporal", "")
 
-    if not nombre or not correo or rol not in {"Gerente", "Operador"} or estado not in {"Activo", "Inactivo"}:
+    if not nombre or not usuarioLogin or not correo or rol not in {"Gerente", "Operador"} or estado not in {"Activo", "Inactivo"}:
         flash("Completa todos los campos requeridos correctamente.", "danger")
+        return redirect(url_for("usuarios.editar", idUsuario=idUsuario))
+
+    usuarioRepetido = Usuario.query.filter(Usuario.usuario == usuarioLogin, Usuario.id != idUsuario).first()
+    if usuarioRepetido:
+        flash("El usuario ya está registrado por otra cuenta.", "danger")
         return redirect(url_for("usuarios.editar", idUsuario=idUsuario))
 
     correoRepetido = Usuario.query.filter(Usuario.correo == correo, Usuario.id != idUsuario).first()
@@ -115,6 +128,7 @@ def actualizar(idUsuario: int):
         return redirect(url_for("usuarios.editar", idUsuario=idUsuario))
 
     usuario.nombre = nombre
+    usuario.usuario = usuarioLogin
     usuario.correo = correo
     usuario.rol = rol
     usuario.estado = estado

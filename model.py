@@ -11,6 +11,7 @@ class Usuario(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(120), nullable=False)
+    usuario = db.Column(db.String(60), unique=True, nullable=True, index=True)
     correo = db.Column(db.String(120), unique=True, nullable=False, index=True)
     contrasenaHash = db.Column("password_hash", db.String(255), nullable=False)
     rol = db.Column(db.String(20), nullable=False)
@@ -45,7 +46,7 @@ class Usuario(db.Model):
 
         return True
 
-    def registrarIntentoFallido(self, maxIntentos: int = 4, minutosBloqueo: int = 15) -> None:
+    def registrarIntentoFallido(self, maxIntentos: int = 3, minutosBloqueo: int = 15) -> None:
         self.intentosFallidos += 1
 
         if self.intentosFallidos >= maxIntentos:

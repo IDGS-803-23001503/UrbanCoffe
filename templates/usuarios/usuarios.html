@@ -77,7 +77,8 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Nombre / Correo</th>
+                                <th>Nombre / Usuario</th>
+                                <th>Correo</th>
                                 <th>Rol Asignado</th>
                                 <th>Estado</th>
                                 <th class="right">Acciones</th>
@@ -88,8 +89,9 @@
                                 <tr>
                                     <td>
                                         <p class="user-name">{{ usuario.nombre }}</p>
-                                        <p class="user-mail">{{ usuario.correo }}</p>
+                                        <p class="user-mail">@{{ usuario.usuario or 'sin-usuario' }}</p>
                                     </td>
+                                    <td class="user-mail">{{ usuario.correo }}</td>
                                     <td class="role-cell">{{ usuario.rol }}</td>
                                     <td>
                                         {% if usuario.estado == 'Activo' %}
@@ -109,7 +111,7 @@
                                 </tr>
                             {% else %}
                                 <tr>
-                                    <td colspan="4" class="empty-state">
+                                    <td colspan="5" class="empty-state">
                                         {% if terminoBusqueda %}
                                             No hay coincidencias para “{{ terminoBusqueda }}”.
                                         {% else %}
