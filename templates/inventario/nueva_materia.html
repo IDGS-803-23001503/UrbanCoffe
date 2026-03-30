@@ -58,10 +58,9 @@
                     <label class="block mb-2 text-sm font-medium text-gray-900">Unidad de Medida *</label>
                     <select name="unidad_medida" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
                         <option value="" disabled selected>Selecciona una unidad...</option>
-                        <option value="1">Kilogramos (kg)</option>
-                        <option value="2">Litros (L)</option>
-                        <option value="3">Gramos (g)</option>
-                        <option value="4">Piezas (pz)</option>
+                        {% for u in unidades %}
+                            <option value="{{ u.id_unidad }}">{{ u.nombre }} ({{ u.abreviacion }})</option>
+                        {% endfor %}
                     </select>
                 </div>
 

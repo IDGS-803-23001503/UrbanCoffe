@@ -57,10 +57,11 @@
                 <div>
                     <label class="block mb-2 text-sm font-medium text-gray-900">Unidad de Medida *</label>
                     <select name="unidad_medida" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
-                        <option value="1" {% if insumo.unidad_medida == 1 %}selected{% endif %}>Kilogramos (kg)</option>
-                        <option value="2" {% if insumo.unidad_medida == 2 %}selected{% endif %}>Litros (L)</option>
-                        <option value="3" {% if insumo.unidad_medida == 3 %}selected{% endif %}>Gramos (g)</option>
-                        <option value="4" {% if insumo.unidad_medida == 4 %}selected{% endif %}>Piezas (pz)</option>
+                        {% for u in unidades %}
+                            <option value="{{ u.id_unidad }}" {% if insumo.unidad_medida == u.id_unidad %}selected{% endif %}>
+                                {{ u.nombre }} ({{ u.abreviacion }})
+                            </option>
+                        {% endfor %}
                     </select>
                 </div>
 

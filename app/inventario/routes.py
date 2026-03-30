@@ -1,6 +1,5 @@
 from flask import Blueprint, render_template, request
-
-from model import db, MateriaPrima
+from model import db, MateriaPrima, UnidadMedida 
 
 inventario_bp = Blueprint('inventario', __name__)
 
@@ -13,17 +12,12 @@ def materias_primas():
     else:
         insumos = MateriaPrima.query.all()
     
-    nombres_unidades = {
-        1: 'Kilogramos (kg)', 
-        2: 'Litros (L)', 
-        3: 'Gramos (g)', 
-        4: 'Piezas (pz)'
-    }
-    
-    return render_template('inventario/index.html', insumos=insumos, unidades=nombres_unidades, busqueda=busqueda)
+    return render_template('inventario/index.html', insumos=insumos, busqueda=busqueda)
 
 @inventario_bp.route('/nueva-materia', methods=['GET', 'POST'])
 def nueva_materia():
+    unidades_db = UnidadMedida.query.all()
+    
     if request.method == 'POST':
         nombre = request.form.get('nombre_insumo')
         descripcion = request.form.get('descripcion')
@@ -38,17 +32,17 @@ def nueva_materia():
             stock_actual=0.0 
         )
 
-        # Guardamos en la base de datos
         db.session.add(nuevo_insumo)
         db.session.commit()
         
-        return render_template('inventario/nueva_materia.html', mostrar_modal=True)
+        return render_template('inventario/nueva_materia.html', mostrar_modal=True, unidades=unidades_db)
     
-    return render_template('inventario/nueva_materia.html', mostrar_modal=False)
+    return render_template('inventario/nueva_materia.html', mostrar_modal=False, unidades=unidades_db)
 
 @inventario_bp.route('/editar-materia/<int:id>', methods=['GET', 'POST'])
 def editar_materia(id):
     insumo = MateriaPrima.query.get_or_404(id)
+    unidades_db = UnidadMedida.query.all() 
 
     if request.method == 'POST':
         insumo.nombre = request.form.get('nombre_insumo')
@@ -57,7 +51,6 @@ def editar_materia(id):
         insumo.stock_minimo = request.form.get('stock_minimo')
 
         db.session.commit()
-        
-        return render_template('inventario/editar_materia.html', mostrar_modal=True, insumo=insumo)
+        return render_template('inventario/editar_materia.html', mostrar_modal=True, insumo=insumo, unidades=unidades_db)
     
-    return render_template('inventario/editar_materia.html', mostrar_modal=False, insumo=insumo)
+    return render_template('inventario/editar_materia.html', mostrar_modal=False, insumo=insumo, unidades=unidades_db)
