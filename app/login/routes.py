@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+from flask import Blueprint, current_app, flash, redirect, render_template, request, session, url_for
+from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from sqlalchemy import inspect, text
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -65,6 +66,10 @@ def iniciarModuloAuth(app) -> None:
         db.create_all()
         asegurarEsquemaUsuarios()
         sembrarUsuariosBase()
+
+
+def serializadorRecuperacion() -> URLSafeTimedSerializer:
+    return URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
 
 
 def usuarioAutenticado() -> bool:
@@ -180,9 +185,65 @@ def registrarUsuario():
     return render_template("register.html")
 
 
-@authBp.route("/forgot-password", endpoint="recuperarContrasena")
+@authBp.route("/forgot-password", methods=["GET", "POST"], endpoint="recuperarContrasena")
 def recuperarContrasena():
-    flash("Recuperación de contraseña pendiente de implementación.", "info")
+    if request.method == "GET":
+        return render_template("auth/forgot_password.html")
+
+    correo = request.form.get("correo", "").strip().lower()
+    if not correo:
+        flash("Ingresa un correo válido.", "danger")
+        return render_template("auth/forgot_password.html")
+
+    usuario = Usuario.query.filter_by(correo=correo).first()
+
+    # Mensaje neutro para no filtrar si la cuenta existe.
+    if not usuario:
+        flash("Si el correo existe, recibirás instrucciones para recuperar tu contraseña.", "info")
+        return render_template("auth/forgot_password.html")
+
+    token = serializadorRecuperacion().dumps({"uid": usuario.id})
+    enlace = url_for("auth.resetearContrasena", token=token, _external=True)
+    flash("Enlace de recuperación generado (entorno de desarrollo):", "success")
+    flash(enlace, "info")
+    return render_template("auth/forgot_password.html")
+
+
+@authBp.route("/reset-password/<token>", methods=["GET", "POST"], endpoint="resetearContrasena")
+def resetearContrasena(token: str):
+    try:
+        datos = serializadorRecuperacion().loads(token, max_age=1800)
+    except SignatureExpired:
+        flash("El enlace expiró. Solicita uno nuevo.", "danger")
+        return redirect(url_for("auth.recuperarContrasena"))
+    except BadSignature:
+        flash("El enlace no es válido.", "danger")
+        return redirect(url_for("auth.recuperarContrasena"))
+
+    usuario = Usuario.query.get(datos.get("uid"))
+    if not usuario:
+        flash("No se encontró la cuenta para restablecer.", "danger")
+        return redirect(url_for("auth.recuperarContrasena"))
+
+    if request.method == "GET":
+        return render_template("auth/reset_password.html")
+
+    nuevaContrasena = request.form.get("contrasena", "")
+    confirmarContrasena = request.form.get("confirmarContrasena", "")
+
+    if not nuevaContrasena or len(nuevaContrasena) < 8:
+        flash("La nueva contraseña debe tener al menos 8 caracteres.", "danger")
+        return render_template("auth/reset_password.html")
+
+    if nuevaContrasena != confirmarContrasena:
+        flash("Las contraseñas no coinciden.", "danger")
+        return render_template("auth/reset_password.html")
+
+    usuario.establecerContrasena(nuevaContrasena)
+    usuario.resetearSeguridad()
+    db.session.commit()
+
+    flash("Contraseña actualizada correctamente. Inicia sesión.", "success")
     return redirect(url_for("auth.iniciarSesion"))
 
 
