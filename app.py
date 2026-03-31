@@ -7,6 +7,7 @@ from sqlalchemy.exc import OperationalError
 
 from config import Config
 from app.login.routes import authBp, endpointDashboardRol, iniciarModuloAuth, usuarioAutenticado
+from app.producto_terminado.routes import producto_bp
 from app.usuarios.routes import usuariosBp
 from model import DetalleVenta, MateriaPrima, ProductoTerminado, Usuario, Venta, db
 
@@ -19,6 +20,7 @@ app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=8)
 
 db.init_app(app)
 app.register_blueprint(authBp)
+app.register_blueprint(producto_bp, url_prefix="/productos")
 app.register_blueprint(usuariosBp)
 try:
     iniciarModuloAuth(app)
