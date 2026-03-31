@@ -76,7 +76,7 @@ def crear():
     contrasenaTemporal = request.form.get("contrasenaTemporal", "")
     estado = request.form.get("estado", "").strip()
 
-    if not nombre or not usuarioLogin or not correo or rol not in {"Gerente", "Operador"} or not contrasenaTemporal or estado not in {"Activo", "Inactivo"}:
+    if not nombre or not usuarioLogin or not correo or rol not in {"Gerente", "Operador", "Cliente"} or not contrasenaTemporal or estado not in {"Activo", "Inactivo"}:
         flash("Completa todos los campos requeridos correctamente.", "danger")
         return redirect(url_for("usuarios.nuevo"))
 
@@ -121,7 +121,7 @@ def actualizar(idUsuario: int):
     estado = request.form.get("estado", "").strip()
     contrasenaTemporal = request.form.get("contrasenaTemporal", "")
 
-    if not nombre or not usuarioLogin or not correo or rol not in {"Gerente", "Operador"} or estado not in {"Activo", "Inactivo"}:
+    if not nombre or not usuarioLogin or not correo or rol not in {"Gerente", "Operador", "Cliente"} or estado not in {"Activo", "Inactivo"}:
         flash("Completa todos los campos requeridos correctamente.", "danger")
         return redirect(url_for("usuarios.editar", idUsuario=idUsuario))
 

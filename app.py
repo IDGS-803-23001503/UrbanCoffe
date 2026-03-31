@@ -9,6 +9,7 @@ from config import Config
 from app.login.routes import authBp, endpointDashboardRol, iniciarModuloAuth, usuarioAutenticado
 from app.producto_terminado.routes import producto_bp
 from app.usuarios.routes import usuariosBp
+from app.ventas.routes import ventasBp
 from model import DetalleVenta, MateriaPrima, ProductoTerminado, Usuario, Venta, db
 
 app = Flask(__name__)
@@ -22,6 +23,7 @@ db.init_app(app)
 app.register_blueprint(authBp)
 app.register_blueprint(producto_bp, url_prefix="/productos")
 app.register_blueprint(usuariosBp)
+app.register_blueprint(ventasBp)
 try:
     iniciarModuloAuth(app)
 except OperationalError as exc:
@@ -224,6 +226,15 @@ def requerirLogin():
 
     if not usuarioAutenticado():
         return redirect(url_for("auth.iniciarSesion"))
+
+    if session.get("usuarioRol") == "Cliente":
+        endpointsCliente = {
+            "ventas.tienda_cliente",
+            "ventas.comprar_producto",
+            "auth.cerrarSesion",
+        }
+        if request.endpoint not in endpointsPublicos and request.endpoint not in endpointsCliente:
+            return redirect(url_for("ventas.tienda_cliente"))
 
     return None
 

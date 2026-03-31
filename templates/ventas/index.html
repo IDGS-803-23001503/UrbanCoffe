@@ -1,11 +1,61 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Urban Coffee - Tienda</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    
+<body class="bg-slate-50">
+    <main class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <header class="mb-8 flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-900">Área de Ventas</h1>
+                <p class="mt-1 text-sm text-slate-500">Hola {{ session.get('usuarioNombre', 'Cliente') }}, selecciona tus productos y compra en línea.</p>
+            </div>
+            <a href="{{ url_for('auth.cerrarSesion') }}" class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">Cerrar sesión</a>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-6 space-y-3">
+                    {% for category, message in messages %}
+                        {% if category == 'danger' %}
+                            <div class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ message }}</div>
+                        {% elif category == 'success' %}
+                            <div class="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{{ message }}</div>
+                        {% else %}
+                            <div class="rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">{{ message }}</div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <section class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {% for producto in productos %}
+                <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <h2 class="text-lg font-semibold text-slate-900">{{ producto.nombre }}</h2>
+                    <p class="mt-2 text-sm text-slate-500">Disponible: <strong>{{ producto.stockActual }}</strong></p>
+                    <p class="mt-2 text-2xl font-bold text-slate-900">${{ '%.2f'|format(producto.precio|float) }}</p>
+
+                    <form method="POST" action="{{ url_for('ventas.comprar_producto') }}" class="mt-4 space-y-3">
+                        <input type="hidden" name="productoId" value="{{ producto.id }}">
+                        <div>
+                            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Cantidad</label>
+                            <input type="number" name="cantidad" min="1" max="{{ producto.stockActual }}" value="1" required class="block w-full rounded-md border border-slate-300 p-2.5 text-sm">
+                        </div>
+                        <button type="submit" {% if producto.stockActual <= 0 %}disabled{% endif %} class="w-full rounded-md bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300">
+                            {% if producto.stockActual > 0 %}Comprar{% else %}Sin stock{% endif %}
+                        </button>
+                    </form>
+                </article>
+            {% else %}
+                <div class="col-span-full rounded-lg border border-slate-200 bg-white px-5 py-8 text-center text-slate-500">
+                    No hay productos disponibles por ahora.
+                </div>
+            {% endfor %}
+        </section>
+    </main>
 </body>
 </html>

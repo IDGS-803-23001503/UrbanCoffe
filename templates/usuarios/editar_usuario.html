@@ -53,6 +53,7 @@
                         <select id="rol" name="rol" required class="block w-full rounded-md border border-gray-300 bg-white p-2.5 text-sm text-gray-900 shadow-sm focus:border-slate-500 focus:ring-slate-500">
                             <option value="Gerente" {% if usuario.rol == 'Gerente' %}selected{% endif %}>Gerente</option>
                             <option value="Operador" {% if usuario.rol == 'Operador' %}selected{% endif %}>Operador</option>
+                            <option value="Cliente" {% if usuario.rol == 'Cliente' %}selected{% endif %}>Cliente</option>
                         </select>
                     </div>
 

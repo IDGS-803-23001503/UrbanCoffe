@@ -100,6 +100,7 @@ def endpointDashboardRol(rol: str) -> str:
     mapaRoles = {
         "Gerente": "dashboard_gerente",
         "Operador": "dashboard_operador",
+        "Cliente": "ventas.tienda_cliente",
     }
     return mapaRoles.get(rol, "dashboard_operador")
 
@@ -192,8 +193,7 @@ def registrarUsuario():
             consecutivo += 1
             usuarioGenerado = f"{usuarioSugerido}{consecutivo}"
 
-        esPrimerUsuario = Usuario.query.count() == 0
-        rolAsignado = "Gerente" if esPrimerUsuario else "Operador"
+        rolAsignado = "Cliente"
 
         usuario = Usuario(nombre=nombre, usuario=usuarioGenerado, correo=correo, rol=rolAsignado, estado="Activo")
         usuario.establecerContrasena(contrasena)
@@ -202,10 +202,7 @@ def registrarUsuario():
         db.session.add(usuario)
         db.session.commit()
 
-        if esPrimerUsuario:
-            flash("Registro completado. Esta cuenta fue asignada como Gerente.", "success")
-        else:
-            flash("Registro completado. Ahora puedes iniciar sesión.", "success")
+        flash("Registro completado. Ahora puedes iniciar sesión.", "success")
         return redirect(url_for("auth.iniciarSesion"))
 
     return render_template("register.html")
