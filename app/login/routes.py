@@ -231,6 +231,11 @@ def recuperarContrasena():
             enviarCorreoRecuperacion(destinatario=usuario.correo, enlace=enlace)
         except Exception as exc:
             current_app.logger.exception("Error al enviar correo de recuperación: %s", exc)
+            if current_app.debug:
+                flash("SMTP no disponible. Enlace temporal (solo desarrollo):", "warning")
+                flash(enlace, "info")
+                return render_template("auth/forgot_password.html")
+
             flash("No se pudo enviar el correo de recuperación en este momento.", "danger")
             return render_template("auth/forgot_password.html")
 
