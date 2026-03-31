@@ -1,1 +1,0 @@
-# Inicialización de la aplicación

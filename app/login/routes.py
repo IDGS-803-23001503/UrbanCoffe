@@ -197,7 +197,6 @@ def recuperarContrasena():
 
     usuario = Usuario.query.filter_by(correo=correo).first()
 
-    # Mensaje neutro para no filtrar si la cuenta existe.
     if not usuario:
         flash("Si el correo existe, recibirás instrucciones para recuperar tu contraseña.", "info")
         return render_template("auth/forgot_password.html")

@@ -1,10 +1,6 @@
 import os
 from urllib.parse import quote_plus
 
-# Este código carga variables de entorno desde un archivo .env local si existe, permitiendo que las variables de entorno del sistema tengan prioridad. Esto es útil para configurar la aplicación sin exponer credenciales en el código fuente.
-
-# Si quieren agregar una variable de entorno se añade en el archivo .env con el formato CLAVE=valor
-
 def _load_local_env() -> None:
     env_path = os.path.join(os.path.dirname(__file__), ".env")
 

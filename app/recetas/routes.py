@@ -1,1 +1,0 @@
-# rutas para la gestión de recetas

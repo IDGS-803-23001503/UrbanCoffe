@@ -22,8 +22,6 @@ class Usuario(db.Model):
     creadoEn = db.Column("creado_en", db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
     def establecerContrasena(self, contrasena: str) -> None:
-        # Se usa hash irreversible para que la contraseña nunca quede expuesta en texto plano,
-        # incluso si la base de datos fuera comprometida.
         self.contrasenaHash = generate_password_hash(contrasena)
 
     def validarContrasena(self, contrasena: str) -> bool:
@@ -51,7 +49,6 @@ class Usuario(db.Model):
 
         if self.intentosFallidos >= maxIntentos:
             self.cuentaBloqueada = True
-            # Bloqueo temporal para frenar ataques de fuerza bruta sin deshabilitar la cuenta de forma permanente.
             self.bloqueoHasta = datetime.now(timezone.utc) + timedelta(minutes=minutosBloqueo)
 
     def resetearSeguridad(self) -> None:
