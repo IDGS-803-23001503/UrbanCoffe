@@ -3,87 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Urban Coffee - Gestión de Usuarios</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
+    <title>Urban Coffee - Directorio de Usuarios</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/usuarios.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-50">
-    <main class="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900">Gestión de Usuarios</h1>
-                <p class="text-sm text-gray-500">Administra cuentas y permisos del sistema Urban Coffee.</p>
-            </div>
-            <a href="{{ url_for('usuarios.nuevo') }}" class="inline-flex items-center rounded-lg bg-amber-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-amber-800 focus:outline-none focus:ring-4 focus:ring-amber-300">
-                Nuevo usuario
-            </a>
-        </div>
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="mb-6 space-y-3">
-                    {% for category, message in messages %}
-                        {% if category == 'danger' %}
-                            <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ message }}</div>
-                        {% elif category == 'success' %}
-                            <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{{ message }}</div>
-                        {% else %}
-                            <div class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">{{ message }}</div>
-                        {% endif %}
-                    {% endfor %}
+<body>
+    <div class="usuarios-layout">
+        <aside class="sidebar">
+            <div class="sidebar-top">
+                <div class="brand-header">
+                    <img src="{{ url_for('static', filename='img/urbanCoffeeLogo.jpeg') }}" alt="Urban Coffee" class="brand-logo">
+                    <span class="brand-fallback">Urban Coffe</span>
                 </div>
-            {% endif %}
-        {% endwith %}
 
-        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm text-gray-600">
-                    <thead class="bg-gray-100 text-xs uppercase tracking-wide text-gray-600">
-                        <tr>
-                            <th scope="col" class="px-6 py-4">Nombre / Correo</th>
-                            <th scope="col" class="px-6 py-4">Rol</th>
-                            <th scope="col" class="px-6 py-4">Estado</th>
-                            <th scope="col" class="px-6 py-4 text-right">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for usuario in usuarios %}
-                            <tr class="border-t border-gray-200 bg-white">
-                                <td class="px-6 py-4">
-                                    <p class="font-semibold text-gray-900">{{ usuario.nombre }}</p>
-                                    <p class="text-xs text-gray-500">{{ usuario.correo }}</p>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-700">{{ usuario.rol }}</span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    {% if usuario.estado == 'Activo' %}
-                                        <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">Activo</span>
-                                    {% else %}
-                                        <span class="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">Suspendido</span>
-                                    {% endif %}
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex justify-end gap-2">
-                                        <a href="{{ url_for('usuarios.editar', idUsuario=usuario.id) }}" class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100">Editar</a>
+                <div class="profile-row">
+                    <div class="avatar">{{ (session.get('usuarioNombre', 'AD')[:2]).upper() }}</div>
+                    <div class="profile-meta">
+                        <p class="name">{{ session.get('usuarioNombre', 'Admin') }}</p>
+                        <p class="role">{{ session.get('usuarioRol', 'Administrador') }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="menu">
+                <p class="menu-title">Principal</p>
+                {% if session.get('usuarioRol') == 'Gerente' %}
+                    <a href="{{ url_for('dashboard_gerente') }}" class="menu-item"><i class="fa-solid fa-table-columns"></i>Dashboard</a>
+                {% else %}
+                    <a href="{{ url_for('dashboard_operador') }}" class="menu-item"><i class="fa-solid fa-table-columns"></i>Dashboard</a>
+                {% endif %}
+                <a href="#" class="menu-item"><i class="fa-solid fa-cash-register"></i>Punto de Venta</a>
+
+                <p class="menu-title">Operación</p>
+                <a href="#" class="menu-item"><i class="fa-regular fa-box"></i>Materias Primas</a>
+                <a href="#" class="menu-item"><i class="fa-regular fa-file-lines"></i>Producto Terminado</a>
+                <a href="#" class="menu-item"><i class="fa-regular fa-clipboard"></i>Solicitudes</a>
+                <a href="#" class="menu-item"><i class="fa-solid fa-gears"></i>Producción</a>
+                <a href="#" class="menu-item"><i class="fa-regular fa-bookmark"></i>Recetas</a>
+
+                <p class="menu-title">Administración</p>
+                <a href="#" class="menu-item"><i class="fa-solid fa-cart-shopping"></i>Compras</a>
+                <a href="#" class="menu-item"><i class="fa-regular fa-building"></i>Proveedores</a>
+                <a href="{{ url_for('usuarios.index') }}" class="menu-item active"><i class="fa-solid fa-users"></i>Usuarios</a>
+                <a href="#" class="menu-item"><i class="fa-solid fa-scale-balanced"></i>Costos y Utilidad</a>
+                <a href="{{ url_for('auth.cerrarSesion') }}" class="menu-item logout"><i class="fa-solid fa-right-from-bracket"></i>Cerrar Sesión</a>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <header class="content-header">
+                <h1>Directorio de Usuarios</h1>
+                <a href="{{ url_for('usuarios.nuevo') }}" class="new-user-btn"><i class="fa-solid fa-plus"></i>Nuevo Usuario</a>
+            </header>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="alerts-stack">
+                        {% for category, message in messages %}
+                            <div class="alert-item {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <section class="users-card">
+                <form method="GET" action="{{ url_for('usuarios.index') }}" class="search-form">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" name="q" value="{{ terminoBusqueda or '' }}" placeholder="Buscar usuario..." autocomplete="off">
+                </form>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nombre / Usuario</th>
+                                <th>Correo</th>
+                                <th>Rol Asignado</th>
+                                <th>Estado</th>
+                                <th class="right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for usuario in usuarios %}
+                                <tr>
+                                    <td>
+                                        <p class="user-name">{{ usuario.nombre }}</p>
+                                        <p class="user-mail">@{{ usuario.usuario or 'sin-usuario' }}</p>
+                                    </td>
+                                    <td class="user-mail">{{ usuario.correo }}</td>
+                                    <td class="role-cell">{{ usuario.rol }}</td>
+                                    <td>
                                         {% if usuario.estado == 'Activo' %}
-                                            <form method="POST" action="{{ url_for('usuarios.desactivar', idUsuario=usuario.id) }}">
-                                                <button type="submit" class="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100">Desactivar</button>
+                                            <span class="status-badge ok"><i class="fa-solid fa-circle"></i>Óptimo</span>
+                                        {% else %}
+                                            <span class="status-badge suspended"><i class="fa-solid fa-triangle-exclamation"></i>Suspendido</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="right actions-cell">
+                                        <a href="{{ url_for('usuarios.editar', idUsuario=usuario.id) }}" class="edit-link">Editar</a>
+                                        {% if usuario.estado == 'Activo' %}
+                                            <form method="POST" action="{{ url_for('usuarios.desactivar', idUsuario=usuario.id) }}" onsubmit="return confirm('¿Seguro que deseas desactivar este usuario?');">
+                                                <button type="submit" class="deactivate-link">Suspender</button>
                                             </form>
                                         {% endif %}
-                                    </div>
-                                </td>
-                            </tr>
-                        {% else %}
-                            <tr>
-                                <td colspan="4" class="px-6 py-10 text-center text-sm text-gray-500">No hay usuarios registrados.</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </main>
-    <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="empty-state">
+                                        {% if terminoBusqueda %}
+                                            No hay coincidencias para “{{ terminoBusqueda }}”.
+                                        {% else %}
+                                            No hay usuarios registrados.
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
 </body>
 </html>

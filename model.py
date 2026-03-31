@@ -11,6 +11,7 @@ class Usuario(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(120), nullable=False)
+    usuario = db.Column(db.String(60), unique=True, nullable=True, index=True)
     correo = db.Column(db.String(120), unique=True, nullable=False, index=True)
     contrasenaHash = db.Column("password_hash", db.String(255), nullable=False)
     rol = db.Column(db.String(20), nullable=False)
@@ -21,8 +22,6 @@ class Usuario(db.Model):
     creadoEn = db.Column("creado_en", db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
     def establecerContrasena(self, contrasena: str) -> None:
-        # Se usa hash irreversible para que la contraseña nunca quede expuesta en texto plano,
-        # incluso si la base de datos fuera comprometida.
         self.contrasenaHash = generate_password_hash(contrasena)
 
     def validarContrasena(self, contrasena: str) -> bool:
@@ -45,12 +44,11 @@ class Usuario(db.Model):
 
         return True
 
-    def registrarIntentoFallido(self, maxIntentos: int = 4, minutosBloqueo: int = 15) -> None:
+    def registrarIntentoFallido(self, maxIntentos: int = 3, minutosBloqueo: int = 15) -> None:
         self.intentosFallidos += 1
 
         if self.intentosFallidos >= maxIntentos:
             self.cuentaBloqueada = True
-            # Bloqueo temporal para frenar ataques de fuerza bruta sin deshabilitar la cuenta de forma permanente.
             self.bloqueoHasta = datetime.now(timezone.utc) + timedelta(minutes=minutosBloqueo)
 
     def resetearSeguridad(self) -> None:
@@ -70,3 +68,52 @@ class RegistroSesion(db.Model):
     fechaInicio = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
     fechaFin = db.Column(db.DateTime(timezone=True), nullable=True)
     activa = db.Column(db.Boolean, nullable=False, default=True)
+
+
+class ProductoTerminado(db.Model):
+    __tablename__ = "productos_terminados"
+
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(120), nullable=False, unique=True)
+    precio = db.Column(db.Numeric(10, 2), nullable=False)
+    stockActual = db.Column("stock_actual", db.Integer, nullable=False, default=0)
+    stockMinimo = db.Column("stock_minimo", db.Integer, nullable=False, default=0)
+    activo = db.Column(db.Boolean, nullable=False, default=True)
+    creadoEn = db.Column("creado_en", db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+
+
+class MateriaPrima(db.Model):
+    __tablename__ = "materias_primas"
+
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(120), nullable=False, unique=True)
+    unidadMedida = db.Column("unidad_medida", db.String(30), nullable=False, default="unidad")
+    stockActual = db.Column("stock_actual", db.Numeric(10, 2), nullable=False, default=0)
+    stockMinimo = db.Column("stock_minimo", db.Numeric(10, 2), nullable=False, default=0)
+    costoUnitario = db.Column("costo_unitario", db.Numeric(10, 2), nullable=False, default=0)
+    activa = db.Column(db.Boolean, nullable=False, default=True)
+    creadoEn = db.Column("creado_en", db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+
+
+class Venta(db.Model):
+    __tablename__ = "ventas"
+
+    id = db.Column(db.Integer, primary_key=True)
+    usuarioId = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=False, index=True)
+    total = db.Column(db.Numeric(10, 2), nullable=False, default=0)
+    utilidadBruta = db.Column("utilidad_bruta", db.Numeric(10, 2), nullable=False, default=0)
+    confirmada = db.Column(db.Boolean, nullable=False, default=True)
+    origen = db.Column(db.String(20), nullable=False, default="POS")
+    creadoEn = db.Column("creado_en", db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), index=True)
+
+
+class DetalleVenta(db.Model):
+    __tablename__ = "detalles_venta"
+
+    id = db.Column(db.Integer, primary_key=True)
+    ventaId = db.Column(db.Integer, db.ForeignKey("ventas.id"), nullable=False, index=True)
+    productoId = db.Column(db.Integer, db.ForeignKey("productos_terminados.id"), nullable=False, index=True)
+    cantidad = db.Column(db.Integer, nullable=False, default=1)
+    precioUnitario = db.Column("precio_unitario", db.Numeric(10, 2), nullable=False, default=0)
+    costoUnitario = db.Column("costo_unitario", db.Numeric(10, 2), nullable=False, default=0)
+    subtotal = db.Column(db.Numeric(10, 2), nullable=False, default=0)
