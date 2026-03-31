@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 from flask import Blueprint, render_template, request
 from model import db, MateriaPrima, UnidadMedida 
 
@@ -56,4 +54,3 @@ def editar_materia(id):
         return render_template('inventario/editar_materia.html', mostrar_modal=True, insumo=insumo, unidades=unidades_db)
     
     return render_template('inventario/editar_materia.html', mostrar_modal=False, insumo=insumo, unidades=unidades_db)
->>>>>>> origin/feature/producto-terminado
