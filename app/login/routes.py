@@ -1,4 +1,7 @@
 from datetime import datetime, timezone
+from email.message import EmailMessage
+import smtplib
+import ssl
 from uuid import uuid4
 
 from flask import Blueprint, current_app, flash, redirect, render_template, request, session, url_for
@@ -36,40 +39,57 @@ def asegurarEsquemaUsuarios() -> None:
     db.session.commit()
 
 
-def sembrarUsuariosBase() -> None:
-    gerente = Usuario.query.filter_by(correo="gerente@urbancoffee.com").first()
-    operador = Usuario.query.filter_by(correo="operador@urbancoffee.com").first()
-
-    if not gerente:
-        gerente = Usuario(correo="gerente@urbancoffee.com", usuario="gerente", nombre="Administrador", rol="Gerente", estado="Activo")
-        gerente.establecerContrasena("Gerente#2026")
-        db.session.add(gerente)
-    else:
-        gerente.usuario = gerente.usuario or "gerente"
-        gerente.nombre = gerente.nombre or "Administrador"
-        gerente.estado = gerente.estado or "Activo"
-
-    if not operador:
-        operador = Usuario(correo="operador@urbancoffee.com", usuario="operador", nombre="Operador", rol="Operador", estado="Activo")
-        operador.establecerContrasena("Operador#2026")
-        db.session.add(operador)
-    else:
-        operador.usuario = operador.usuario or "operador"
-        operador.nombre = operador.nombre or "Operador"
-        operador.estado = operador.estado or "Activo"
-
-    db.session.commit()
-
-
 def iniciarModuloAuth(app) -> None:
     with app.app_context():
         db.create_all()
         asegurarEsquemaUsuarios()
-        sembrarUsuariosBase()
 
 
 def serializadorRecuperacion() -> URLSafeTimedSerializer:
     return URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+
+
+def enviarCorreoRecuperacion(destinatario: str, enlace: str) -> None:
+    smtpHost = current_app.config.get("SMTP_HOST", "")
+    smtpPort = int(current_app.config.get("SMTP_PORT", 587))
+    smtpUser = current_app.config.get("SMTP_USER", "")
+    smtpPassword = current_app.config.get("SMTP_PASSWORD", "")
+    smtpFrom = current_app.config.get("SMTP_FROM", "")
+    usarTls = bool(current_app.config.get("SMTP_USE_TLS", True))
+    usarSsl = bool(current_app.config.get("SMTP_USE_SSL", False))
+
+    if not smtpHost or not smtpFrom:
+        raise RuntimeError("Configuración SMTP incompleta: define SMTP_HOST y SMTP_FROM")
+
+    mensaje = EmailMessage()
+    mensaje["Subject"] = "Urban Coffee - Recuperación de contraseña"
+    mensaje["From"] = smtpFrom
+    mensaje["To"] = destinatario
+    mensaje.set_content(
+        (
+            "Hola,\n\n"
+            "Recibimos una solicitud para restablecer tu contraseña en Urban Coffee.\n"
+            "Usa el siguiente enlace (válido por 30 minutos):\n\n"
+            f"{enlace}\n\n"
+            "Si no solicitaste este cambio, puedes ignorar este correo.\n"
+        )
+    )
+
+    contextoSsl = ssl.create_default_context()
+
+    if usarSsl:
+        with smtplib.SMTP_SSL(smtpHost, smtpPort, timeout=15, context=contextoSsl) as servidor:
+            if smtpUser and smtpPassword:
+                servidor.login(smtpUser, smtpPassword)
+            servidor.send_message(mensaje)
+        return
+
+    with smtplib.SMTP(smtpHost, smtpPort, timeout=15) as servidor:
+        if usarTls:
+            servidor.starttls(context=contextoSsl)
+        if smtpUser and smtpPassword:
+            servidor.login(smtpUser, smtpPassword)
+        servidor.send_message(mensaje)
 
 
 def usuarioAutenticado() -> bool:
@@ -172,14 +192,20 @@ def registrarUsuario():
             consecutivo += 1
             usuarioGenerado = f"{usuarioSugerido}{consecutivo}"
 
-        usuario = Usuario(nombre=nombre, usuario=usuarioGenerado, correo=correo, rol="Operador", estado="Activo")
+        esPrimerUsuario = Usuario.query.count() == 0
+        rolAsignado = "Gerente" if esPrimerUsuario else "Operador"
+
+        usuario = Usuario(nombre=nombre, usuario=usuarioGenerado, correo=correo, rol=rolAsignado, estado="Activo")
         usuario.establecerContrasena(contrasena)
         usuario.resetearSeguridad()
 
         db.session.add(usuario)
         db.session.commit()
 
-        flash("Registro completado. Ahora puedes iniciar sesión.", "success")
+        if esPrimerUsuario:
+            flash("Registro completado. Esta cuenta fue asignada como Gerente.", "success")
+        else:
+            flash("Registro completado. Ahora puedes iniciar sesión.", "success")
         return redirect(url_for("auth.iniciarSesion"))
 
     return render_template("register.html")
@@ -197,14 +223,18 @@ def recuperarContrasena():
 
     usuario = Usuario.query.filter_by(correo=correo).first()
 
-    if not usuario:
-        flash("Si el correo existe, recibirás instrucciones para recuperar tu contraseña.", "info")
-        return render_template("auth/forgot_password.html")
+    if usuario:
+        token = serializadorRecuperacion().dumps({"uid": usuario.id})
+        enlace = url_for("auth.resetearContrasena", token=token, _external=True)
 
-    token = serializadorRecuperacion().dumps({"uid": usuario.id})
-    enlace = url_for("auth.resetearContrasena", token=token, _external=True)
-    flash("Enlace de recuperación generado (entorno de desarrollo):", "success")
-    flash(enlace, "info")
+        try:
+            enviarCorreoRecuperacion(destinatario=usuario.correo, enlace=enlace)
+        except Exception as exc:
+            current_app.logger.exception("Error al enviar correo de recuperación: %s", exc)
+            flash("No se pudo enviar el correo de recuperación en este momento.", "danger")
+            return render_template("auth/forgot_password.html")
+
+    flash("Si el correo existe, recibirás instrucciones para recuperar tu contraseña.", "info")
     return render_template("auth/forgot_password.html")
 
 

@@ -8,6 +8,14 @@ from model import Usuario, db
 usuariosBp = Blueprint("usuarios", __name__, url_prefix="/usuarios")
 
 
+def hayOtroGerenteActivo(idUsuarioActual: int) -> bool:
+    return Usuario.query.filter(
+        Usuario.id != idUsuarioActual,
+        Usuario.rol == "Gerente",
+        Usuario.estado == "Activo",
+    ).first() is not None
+
+
 def requiereRol(rolRequerido: str):
     def decorador(funcionVista):
         @wraps(funcionVista)
@@ -127,6 +135,11 @@ def actualizar(idUsuario: int):
         flash("El correo ya está registrado por otro usuario.", "danger")
         return redirect(url_for("usuarios.editar", idUsuario=idUsuario))
 
+    perderaPrivilegiosGerente = usuario.rol == "Gerente" and (rol != "Gerente" or estado != "Activo")
+    if perderaPrivilegiosGerente and not hayOtroGerenteActivo(idUsuario):
+        flash("Debe existir al menos un Gerente activo en el sistema.", "danger")
+        return redirect(url_for("usuarios.editar", idUsuario=idUsuario))
+
     usuario.nombre = nombre
     usuario.usuario = usuarioLogin
     usuario.correo = correo
@@ -149,6 +162,10 @@ def desactivar(idUsuario: int):
 
     if usuario.id == session.get("usuarioId"):
         flash("No puedes desactivar tu propia cuenta.", "danger")
+        return redirect(url_for("usuarios.index"))
+
+    if usuario.rol == "Gerente" and not hayOtroGerenteActivo(idUsuario):
+        flash("Debe existir al menos un Gerente activo en el sistema.", "danger")
         return redirect(url_for("usuarios.index"))
 
     usuario.estado = "Inactivo"

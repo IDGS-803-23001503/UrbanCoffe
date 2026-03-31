@@ -208,7 +208,14 @@ def construirContextoDashboard(periodoDias: int, puedeVerFinanzas: bool) -> dict
 
 @app.before_request
 def requerirLogin():
-    endpointsPublicos = {"auth.iniciarSesion", "auth.registrarUsuario", "auth.recuperarContrasena", "index", "static"}
+    endpointsPublicos = {
+        "auth.iniciarSesion",
+        "auth.registrarUsuario",
+        "auth.recuperarContrasena",
+        "auth.resetearContrasena",
+        "index",
+        "static",
+    }
 
     if request.endpoint in endpointsPublicos:
         return None

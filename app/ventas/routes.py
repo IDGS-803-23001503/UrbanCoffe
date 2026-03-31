@@ -1,1 +1,0 @@
-# Rutas para la gestión de ventas
