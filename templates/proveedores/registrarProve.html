@@ -1,0 +1,102 @@
+{% extends "layout.html" %}
+{% block container %}
+{% import "_macros.html" as macros %}
+
+<div class="w-full max-w-md mx-auto p-4">
+  <!-- Encabezado -->
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+      Nuevo Proveedor
+    </h2>
+    <a href="{{ url_for('proveedores.index') }}"
+       class="text-white bg-gray-500 box-border border border-transparent hover:bg-gray-600 focus:ring-4 focus:ring-gray-300 shadow-xs font-medium leading-5 rounded-base text-sm px-5 py-2.5 focus:outline-none inline-flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+      </svg>
+      Regresar
+    </a>
+  </div>
+
+  <!-- Card con formulario -->
+  <div class="bg-white dark:bg-gray-800 rounded-base shadow-xs border border-default p-6">
+    
+    <form action="{{ url_for('proveedores.nuevo') }}" method="POST" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+      <!-- Nombre / Razón Social -->
+      <div class="mb-5">
+        <label for="nombre" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+          Nombre / Razón Social <span class="text-red-500">*</span>
+        </label>
+        {{ form.nombre(class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs placeholder:text-body", placeholder="Ingrese el nombre o razón social") }}
+        {% if form.nombre.errors %}
+          {% for error in form.nombre.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      <!-- RFC -->
+      <div class="mb-5">
+        <label for="rfc" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+          RFC <span class="text-red-500">*</span>
+        </label>
+        {{ form.rfc(class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs placeholder:text-body uppercase", placeholder="Ej: DGC950824KF1") }}
+        {% if form.rfc.errors %}
+          {% for error in form.rfc.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+          {% endfor %}
+        {% endif %}
+        <p class="text-xs text-gray-400 mt-1">13 caracteres (RFC con homoclave)</p>
+      </div>
+
+      <!-- Teléfono -->
+      <div class="mb-5">
+        <label for="telefono" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+          Teléfono
+        </label>
+        {{ form.telefono(class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs placeholder:text-body", placeholder="Ej: 55-4321-8890") }}
+        {% if form.telefono.errors %}
+          {% for error in form.telefono.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      <!-- Email -->
+      <div class="mb-5">
+        <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+          Correo Electrónico
+        </label>
+        {{ form.email(class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs placeholder:text-body", placeholder="ejemplo@correo.com") }}
+        {% if form.email.errors %}
+          {% for error in form.email.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      <!-- Dirección -->
+      <div class="mb-5">
+        <label for="direccion" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+          Dirección
+        </label>
+        {{ form.direccion(class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs placeholder:text-body", rows="2", placeholder="Ej: Av. Principal #123, Col. Centro, León, Gto.") }}
+        {% if form.direccion.errors %}
+          {% for error in form.direccion.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      <!-- Botón -->
+      <button type="submit" 
+              class="w-full text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-5 py-3 focus:outline-none">
+        Registrar Proveedor
+      </button>
+
+    </form>
+  </div>
+</div>
+
+{% endblock %}

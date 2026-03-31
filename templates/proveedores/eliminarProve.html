@@ -1,0 +1,81 @@
+{% extends "layout.html" %}
+{% block container %}
+
+<div class="w-full max-w-md mx-auto p-4">
+  <!-- Encabezado -->
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+      Desactivar Proveedor
+    </h2>
+    <a href="{{ url_for('proveedores.index') }}" 
+       class="text-white bg-gray-500 box-border border border-transparent hover:bg-gray-600 focus:ring-4 focus:ring-gray-300 shadow-xs font-medium leading-5 rounded-base text-sm px-5 py-2.5 focus:outline-none inline-flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+      </svg>
+      Regresar
+    </a>
+  </div>
+
+  <!-- Card de confirmación -->
+  <div class="bg-white dark:bg-gray-800 rounded-base shadow-xs border border-default overflow-hidden">
+    
+    <!-- Warning header -->
+    <div class="bg-red-100 border-b border-red-300 px-6 py-4 flex items-center gap-3">
+      <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+      </svg>
+      <p class="text-sm font-medium text-red-800">
+        ¿Estás seguro de que deseas desactivar este proveedor?
+      </p>
+    </div>
+
+    <!-- Datos del proveedor -->
+    <div class="px-6 py-6">
+      <dl class="divide-y divide-gray-200 dark:divide-gray-700">
+        <div class="py-3 flex justify-between">
+          <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Nombre</dt>
+          <dd class="text-sm text-gray-900 dark:text-white font-semibold">
+            {{ proveedor.nombre }}
+          </dd>
+        </div>
+        <div class="py-3 flex justify-between">
+          <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">RFC</dt>
+          <dd class="text-sm text-gray-900 dark:text-white font-mono">
+            {{ proveedor.rfc }}
+          </dd>
+        </div>
+        <div class="py-3 flex justify-between">
+          <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Teléfono</dt>
+          <dd class="text-sm text-gray-900 dark:text-white">
+            {{ proveedor.telefono or 'No registrado' }}
+          </dd>
+        </div>
+      </dl>
+      
+      <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-base">
+        <p class="text-sm text-yellow-800">
+          El proveedor quedará como <strong>inactivo</strong> y podrás reactivarlo en cualquier momento.
+        </p>
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="px-6 pb-6 flex gap-3">
+      <form action="{{ url_for('proveedores.eliminar', id=proveedor.id) }}" 
+            method="POST" 
+            class="flex-1">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <button type="submit" 
+                class="w-full text-white bg-danger box-border border border-transparent hover:bg-danger-strong focus:ring-4 focus:ring-danger-medium shadow-xs font-medium leading-5 rounded-base text-sm px-5 py-3 focus:outline-none">
+          Sí, Desactivar
+        </button>
+      </form>
+      <a href="{{ url_for('proveedores.index') }}" 
+         class="flex-1 text-center text-gray-900 bg-white box-border border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 shadow-xs font-medium leading-5 rounded-base text-sm px-5 py-3 focus:outline-none dark:text-white dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600">
+        Cancelar
+      </a>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

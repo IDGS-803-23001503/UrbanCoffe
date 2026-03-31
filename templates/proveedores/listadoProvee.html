@@ -1,0 +1,115 @@
+{% extends "layout.html" %}
+{% block container %}
+
+<div class="w-full max-w-6xl mx-auto p-4">
+  <!-- Título y botón Nuevo -->
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+      Lista de Proveedores
+    </h2>
+    <div class="flex gap-2">
+      <a href="{{ url_for('index') }}"
+         class="text-white bg-gray-500 box-border border border-transparent hover:bg-gray-600 focus:ring-4 focus:ring-gray-300 shadow-xs font-medium leading-5 rounded-base text-sm px-5 py-2.5 focus:outline-none inline-flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg>
+        Inicio
+      </a>
+      <a href="{{ url_for('proveedores.nuevo') }}" 
+         class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-5 py-2.5 focus:outline-none inline-flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Nuevo Proveedor
+      </a>
+    </div>
+  </div>
+
+  <!-- Barra de búsqueda y filtros -->
+  <div class="mb-6 flex flex-wrap gap-3">
+    <form method="GET" action="{{ url_for('proveedores.index') }}" class="flex gap-2 flex-1">
+      <div class="flex-1">
+        <input type="text" name="busqueda" placeholder="Buscar por nombre o RFC..." 
+               value="{{ busqueda }}"
+               class="w-full bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand px-3 py-2.5 shadow-xs">
+      </div>
+      <select name="estado" class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand px-3 py-2.5 shadow-xs">
+        <option value="todos" {% if estado == 'todos' %}selected{% endif %}>Todos</option>
+        <option value="activos" {% if estado == 'activos' %}selected{% endif %}>Activos</option>
+        <option value="inactivos" {% if estado == 'inactivos' %}selected{% endif %}>Inactivos</option>
+      </select>
+      <button type="submit" class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-5 py-2.5 focus:outline-none">
+        Buscar
+      </button>
+    </form>
+  </div>
+
+  <!-- Tabla -->
+  <div class="relative overflow-x-auto shadow-xs rounded-base border border-default">
+    <table class="w-full text-sm text-left rtl:text-right text-fg-brand-subtle">
+      <thead class="text-sm text-white bg-brand-strong">
+        <tr>
+          <th class="px-6 py-3 font-medium">Nombre / Razón Social</th>
+          <th class="px-6 py-3 font-medium">RFC</th>
+          <th class="px-6 py-3 font-medium">Contacto</th>
+          <th class="px-6 py-3 font-medium">Estado</th>
+          <th class="px-6 py-3 font-medium">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for proveedor in proveedores %}
+        <tr class="{{ 'bg-brand' if loop.index is odd else 'bg-brand-strong' }} border-b border-brand-light">
+          <td class="px-6 py-4 font-medium whitespace-nowrap">
+            {{ proveedor.nombre }}
+          </td>
+          <td class="px-6 py-4 font-mono text-sm">
+            {{ proveedor.rfc }}
+          </td>
+          <td class="px-6 py-4">
+            {% if proveedor.telefono %}
+              <div class="text-sm">{{ proveedor.telefono }}</div>
+            {% endif %}
+            {% if proveedor.email %}
+              <div class="text-xs text-gray-400">{{ proveedor.email }}</div>
+            {% endif %}
+          </td>
+          <td class="px-6 py-4">
+            {% if proveedor.estado %}
+              <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Activo</span>
+            {% else %}
+              <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Inactivo</span>
+            {% endif %}
+          </td>
+          <td class="px-6 py-4 flex gap-2">
+            <a href="{{ url_for('proveedores.detalle', id=proveedor.id) }}" 
+               class="text-white bg-success box-border border border-transparent hover:bg-success-strong focus:ring-4 focus:ring-success-medium shadow-xs font-medium leading-5 rounded-full text-sm px-4 py-2.5 focus:outline-none">
+              Detalle
+            </a>
+            <a href="{{ url_for('proveedores.modificar', id=proveedor.id) }}" 
+               class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-full text-sm px-4 py-2.5 focus:outline-none">
+              Editar
+            </a>
+            {% if proveedor.estado %}
+            <a href="{{ url_for('proveedores.eliminar', id=proveedor.id) }}" 
+               class="text-white bg-danger box-border border border-transparent hover:bg-danger-strong focus:ring-4 focus:ring-danger-medium shadow-xs font-medium leading-5 rounded-full text-sm px-4 py-2.5 focus:outline-none">
+              Desactivar
+            </a>
+            {% else %}
+            <a href="{{ url_for('proveedores.reactivar', id=proveedor.id) }}" 
+               class="text-white bg-success box-border border border-transparent hover:bg-success-strong focus:ring-4 focus:ring-success-medium shadow-xs font-medium leading-5 rounded-full text-sm px-4 py-2.5 focus:outline-none">
+              Reactivar
+            </a>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr class="bg-brand">
+          <td colspan="5" class="px-6 py-8 text-center">
+            No hay proveedores registrados. ¡Agrega uno nuevo!
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

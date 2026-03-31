@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Urban Café{% endblock %}</title>
+  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+
+  <style type="text/tailwindcss">
+    @theme {
+      /* ── Colores de marca (café espresso) ──────────────────── */
+      --color-brand:        #5C3317;
+      --color-brand-strong: #2C1810;
+      --color-brand-medium: #7B4F2E;
+      --color-brand-light:  #C4956A;
+
+      /* ── Texto sobre fondos oscuros de marca ───────────────── */
+      --color-fg-brand-subtle: #F5E6D3;
+
+      /* ── Estados ───────────────────────────────────────────── */
+      --color-success:        #16A34A;
+      --color-success-strong: #15803D;
+      --color-success-medium: #4ADE80;
+
+      --color-danger:        #DC2626;
+      --color-danger-strong: #B91C1C;
+      --color-danger-medium: #FCA5A5;
+
+      /* ── Neutros y bordes ──────────────────────────────────── */
+      --color-neutral-secondary-medium: #FDF8F5;
+      --color-default:        #E8D8CC;
+      --color-default-medium: #D4B59A;
+
+      /* ── Texto general ─────────────────────────────────────── */
+      --color-heading: #1C0F07;
+      --color-body:    #6B4A2A;
+
+      /* ── Radios y sombras ──────────────────────────────────── */
+      --radius-base: 0.5rem;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+  <div class="flex min-h-screen">
+
+    <!-- ═══════════════════════════════════════════════
+         SIDEBAR
+    ═══════════════════════════════════════════════ -->
+    <aside class="w-60 bg-brand-strong flex-shrink-0 flex flex-col shadow-lg">
+
+      <!-- Logo -->
+      <div class="px-6 py-5 border-b border-brand">
+        <h1 class="text-lg font-bold text-fg-brand-subtle tracking-wide">UrbanCoffee</h1>
+        <p class="text-xs text-brand-light mt-0.5">Sistema de Gestión</p>
+      </div>
+
+      <!-- Navegación -->
+      <nav class="flex-1 px-3 py-5 space-y-1 text-sm">
+
+        <a href="{{ url_for('index') }}"
+           class="flex items-center gap-2 px-3 py-2 rounded-base text-fg-brand-subtle
+                  hover:bg-brand transition-colors font-medium">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10
+                     a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4
+                     a1 1 0 01-1 1h-2z"/>
+          </svg>
+          Dashboard
+        </a>
+
+        <a href="{{ url_for('proveedores.index') }}"
+           class="flex items-center gap-2 px-3 py-2 rounded-base text-fg-brand-subtle
+                  hover:bg-brand transition-colors font-medium">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283
+                     -.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283
+                     .356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          Proveedores
+        </a>
+
+      </nav>
+    </aside>
+
+    <!-- ═══════════════════════════════════════════════
+         CONTENIDO PRINCIPAL
+    ═══════════════════════════════════════════════ -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+
+      <!-- Barra superior -->
+      <header class="bg-white border-b border-default px-6 py-3 flex items-center shadow-xs">
+        <h2 class="text-base font-semibold text-heading">
+          {% block header %}UrbanCoffee – Gestión{% endblock %}
+        </h2>
+      </header>
+
+      <!-- Mensajes flash -->
+      <div class="px-6 pt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="mb-3 px-4 py-3 rounded-base text-sm font-medium border
+                {% if category == 'success' %}
+                  bg-green-50 text-green-800 border-green-300
+                {% elif category in ('error', 'danger') %}
+                  bg-red-50 text-red-800 border-red-300
+                {% elif category == 'warning' %}
+                  bg-yellow-50 text-yellow-800 border-yellow-300
+                {% else %}
+                  bg-blue-50 text-blue-800 border-blue-300
+                {% endif %}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+      </div>
+
+      <!-- Contenido de la página -->
+      <main class="flex-1 p-6 overflow-auto">
+        {% block container %}{% endblock %}
+      </main>
+
+    </div>
+  </div>
+</body>
+</html>

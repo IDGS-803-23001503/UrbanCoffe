@@ -1,15 +1,36 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "layout.html" %}
+{% block title %}Dashboard – UrbanCoffee{% endblock %}
+{% block header %}Dashboard{% endblock %}
+{% block container %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Urban Coffe</title>
-</head>
+<div class="w-full max-w-5xl mx-auto">
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-900">Bienvenido a UrbanCoffee</h2>
+    <p class="text-sm text-gray-500 mt-1">Sistema de Gestión Integral</p>
+  </div>
 
-<body>
-    <h1>Urban Coffe</h1>
-    <p>Bienvenido a Urban Coffe</p>
-</body>
+  <!-- Tarjetas de módulos -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
 
-</html>
+    <!-- Proveedores -->
+    <a href="{{ url_for('proveedores.index') }}"
+       class="flex items-center gap-4 bg-white rounded-base shadow-xs border border-default p-5
+              hover:border-brand-medium hover:shadow-sm transition-all">
+      <div class="w-12 h-12 rounded-full bg-brand-strong flex items-center justify-center flex-shrink-0">
+        <svg class="w-6 h-6 text-fg-brand-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857
+                   M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857
+                   m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </div>
+      <div>
+        <p class="font-semibold text-heading">Proveedores</p>
+        <p class="text-xs text-gray-500 mt-0.5">Gestión de proveedores y contactos</p>
+      </div>
+    </a>
+
+  </div>
+</div>
+
+{% endblock %}
