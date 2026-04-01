@@ -1,11 +1,162 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    
-</body>
-</html>
+{% extends "layout.html" %}
+{% block container %}
+
+<div class="w-full max-w-7xl mx-auto p-4">
+  <!-- Encabezado -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+        Costos y Utilidad
+      </h2>
+      <p class="text-gray-500 dark:text-gray-400 mt-1">
+        Análisis de rentabilidad del negocio
+      </p>
+    </div>
+    <div class="flex gap-2">
+      <a href="{{ url_for('index') }}"
+         class="text-white bg-gray-500 box-border border border-transparent hover:bg-gray-600 focus:ring-4 focus:ring-gray-300 shadow-xs font-medium leading-5 rounded-base text-sm px-5 py-2.5 focus:outline-none inline-flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg>
+        Inicio
+      </a>
+      <a href="{{ url_for('utilidad.reporte') }}" 
+         class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-5 py-2.5 focus:outline-none inline-flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        Reporte Detallado
+      </a>
+    </div>
+  </div>
+
+  <!-- Tarjetas de resumen del día -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white dark:bg-gray-800 rounded-base shadow-xs border border-default p-5">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Ventas del Día</p>
+          <p class="text-2xl font-bold text-gray-900 dark:text-white">${{ "%.2f"|format(total_ventas_hoy) }}</p>
+        </div>
+        <div class="p-3 bg-green-100 rounded-full">
+          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-base shadow-xs border border-default p-5">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Costo de Ventas</p>
+          <p class="text-2xl font-bold text-gray-900 dark:text-white">${{ "%.2f"|format(costo_ventas_hoy) }}</p>
+        </div>
+        <div class="p-3 bg-orange-100 rounded-full">
+          <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-base shadow-xs border border-default p-5">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Utilidad Bruta</p>
+          <p class="text-2xl font-bold text-blue-600">${{ "%.2f"|format(utilidad_hoy) }}</p>
+        </div>
+        <div class="p-3 bg-blue-100 rounded-full">
+          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-base shadow-xs border border-default p-5">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Margen de Ganancia</p>
+          <p class="text-2xl font-bold text-purple-600">{{ "%.1f"|format(margen_hoy) }}%</p>
+        </div>
+        <div class="p-3 bg-purple-100 rounded-full">
+          <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resumen de períodos -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+    <div class="bg-white dark:bg-gray-800 rounded-base shadow-xs border border-default p-5">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Ventas de la Semana</h3>
+      <p class="text-3xl font-bold text-gray-900">${{ "%.2f"|format(total_ventas_semana) }}</p>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-base shadow-xs border border-default p-5">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Ventas del Mes</h3>
+      <p class="text-3xl font-bold text-gray-900">${{ "%.2f"|format(total_ventas_mes) }}</p>
+    </div>
+  </div>
+
+  <!-- Productos más rentables y menos rentables -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white dark:bg-gray-800 rounded-base shadow-xs border border-default overflow-hidden">
+      <div class="px-6 py-4 border-b border-default bg-brand-strong">
+        <h3 class="text-lg font-semibold text-white">Productos Más Rentables</h3>
+      </div>
+      <div class="p-4">
+        {% if top_rentables %}
+        <div class="space-y-3">
+          {% for producto in top_rentables %}
+          <a href="{{ url_for('utilidad.producto_detalle', producto_id=producto.id) }}" class="block">
+            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 transition">
+              <div>
+                <p class="font-medium text-gray-900 dark:text-white">{{ producto.nombre }}</p>
+                <p class="text-sm text-gray-500">Precio: ${{ "%.2f"|format(producto.precio) }} | Costo: ${{ "%.2f"|format(producto.costo) }}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-lg font-bold text-green-600">+${{ "%.2f"|format(producto.margen) }}</p>
+                <p class="text-sm text-green-500">{{ "%.1f"|format(producto.porcentaje) }}% margen</p>
+              </div>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-center text-gray-500 py-8">No hay productos registrados</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-base shadow-xs border border-default overflow-hidden">
+      <div class="px-6 py-4 border-b border-default bg-danger">
+        <h3 class="text-lg font-semibold text-white">Productos Menos Rentables</h3>
+      </div>
+      <div class="p-4">
+        {% if menos_rentables %}
+        <div class="space-y-3">
+          {% for producto in menos_rentables %}
+          <a href="{{ url_for('utilidad.producto_detalle', producto_id=producto.id) }}" class="block">
+            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 transition">
+              <div>
+                <p class="font-medium text-gray-900 dark:text-white">{{ producto.nombre }}</p>
+                <p class="text-sm text-gray-500">Precio: ${{ "%.2f"|format(producto.precio) }} | Costo: ${{ "%.2f"|format(producto.costo) }}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-lg font-bold text-orange-600">+${{ "%.2f"|format(producto.margen) }}</p>
+                <p class="text-sm text-orange-500">{{ "%.1f"|format(producto.porcentaje) }}% margen</p>
+              </div>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-center text-gray-500 py-8">No hay productos registrados</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

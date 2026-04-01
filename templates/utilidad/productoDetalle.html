@@ -1,0 +1,185 @@
+{% extends "layout.html" %}
+{% block container %}
+
+<div class="w-full max-w-4xl mx-auto p-4">
+  <!-- Encabezado -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+        Detalle de Rentabilidad
+      </h2>
+      <p class="text-gray-500 dark:text-gray-400 mt-1">
+        Análisis detallado del producto
+      </p>
+    </div>
+    <div class="flex gap-2">
+      <a href="{{ url_for('index') }}"
+         class="text-white bg-gray-500 box-border border border-transparent hover:bg-gray-600 focus:ring-4 focus:ring-gray-300 shadow-xs font-medium leading-5 rounded-base text-sm px-5 py-2.5 focus:outline-none inline-flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/>
+        </svg>
+        Inicio
+      </a>
+      <a href="{{ url_for('utilidad.dashboard') }}"
+         class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-5 py-2.5 focus:outline-none inline-flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+        </svg>
+        Dashboard
+      </a>
+    </div>
+  </div>
+
+  <!-- Card del producto -->
+  <div class="bg-white dark:bg-gray-800 rounded-base shadow-xs border border-default overflow-hidden">
+    <div class="bg-brand-strong px-6 py-8">
+      <h3 class="text-2xl font-bold text-white">{{ producto.nombre }}</h3>
+      <p class="text-white text-sm opacity-90 mt-1">{{ producto.categoria or 'Sin categoría' }}</p>
+    </div>
+
+    <div class="p-6">
+      <!-- Métricas principales -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center">
+          <p class="text-sm text-gray-500 dark:text-gray-400">Precio de Venta</p>
+          <p class="text-2xl font-bold text-gray-900 dark:text-white">${{ "%.2f"|format(producto.precio_venta) }}</p>
+        </div>
+        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center">
+          <p class="text-sm text-gray-500 dark:text-gray-400">Costo de Producción</p>
+          <p class="text-2xl font-bold text-orange-600">${{ "%.2f"|format(costo) }}</p>
+        </div>
+        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center">
+          <p class="text-sm text-gray-500 dark:text-gray-400">Margen de Ganancia</p>
+          <p class="text-2xl font-bold text-green-600">
+            ${{ "%.2f"|format(margen) }}
+            <span class="text-sm">({{ "%.1f"|format(porcentaje) }}%)</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- ===== RECETA / INGREDIENTES ===== -->
+      <div class="border-t border-default pt-6 mb-8">
+        <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+          Receta — Desglose de Costos
+        </h4>
+
+        {% if producto.recetas %}
+        <div class="overflow-x-auto rounded-lg border border-default">
+          <table class="w-full text-sm text-left">
+            <thead class="bg-gray-50 dark:bg-gray-700 text-xs uppercase text-gray-500 dark:text-gray-400">
+              <tr>
+                <th class="px-4 py-3">Ingrediente</th>
+                <th class="px-4 py-3 text-right">Cantidad</th>
+                <th class="px-4 py-3 text-right">Unidad</th>
+                <th class="px-4 py-3 text-right">Costo/Unidad</th>
+                <th class="px-4 py-3 text-right">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+              {% for receta in producto.recetas %}
+              {% set mp = receta.materia_prima %}
+              {% set costo_mp = mp.costo_promedio or 0 %}
+              {% set subtotal_ing = receta.cantidad * costo_mp %}
+              <tr class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">
+                  {{ mp.nombre }}
+                  {% if mp.descripcion %}
+                  <span class="block text-xs text-gray-400 font-normal">{{ mp.descripcion }}</span>
+                  {% endif %}
+                </td>
+                <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300">
+                  {{ "%.2f"|format(receta.cantidad) }}
+                </td>
+                <td class="px-4 py-3 text-right text-gray-500">
+                  {{ mp.unidad.abreviacion if mp.unidad else '—' }}
+                </td>
+                <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300">
+                  ${{ "%.4f"|format(costo_mp) }}
+                </td>
+                <td class="px-4 py-3 text-right font-semibold text-orange-600">
+                  ${{ "%.4f"|format(subtotal_ing) }}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot class="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <td colspan="4" class="px-4 py-3 text-right font-bold text-gray-700 dark:text-gray-200">
+                  Costo Total de Producción
+                </td>
+                <td class="px-4 py-3 text-right font-bold text-orange-600 text-base">
+                  ${{ "%.2f"|format(costo) }}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-8 text-gray-400">
+          <svg class="w-10 h-10 mx-auto mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <p class="text-sm">Este producto no tiene receta registrada.</p>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Estadísticas de Ventas -->
+      <div class="border-t border-default pt-6">
+        <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+          </svg>
+          Estadísticas de Ventas
+        </h4>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-blue-50 dark:bg-blue-900 rounded-lg p-4">
+            <p class="text-sm text-blue-600 dark:text-blue-300">Unidades Vendidas</p>
+            <p class="text-2xl font-bold text-blue-700 dark:text-blue-200">{{ "%.0f"|format(total_vendido) }}</p>
+          </div>
+          <div class="bg-green-50 dark:bg-green-900 rounded-lg p-4">
+            <p class="text-sm text-green-600 dark:text-green-300">Ingresos Totales</p>
+            <p class="text-2xl font-bold text-green-700 dark:text-green-200">${{ "%.2f"|format(total_ingresos) }}</p>
+          </div>
+          <div class="bg-orange-50 dark:bg-orange-900 rounded-lg p-4">
+            <p class="text-sm text-orange-600 dark:text-orange-300">Costo Total Acumulado</p>
+            <p class="text-2xl font-bold text-orange-700 dark:text-orange-200">${{ "%.2f"|format(total_costos) }}</p>
+          </div>
+        </div>
+
+        <!-- Utilidad neta acumulada -->
+        {% set utilidad_neta = total_ingresos - total_costos %}
+        <div class="mt-4 p-4 rounded-lg {% if utilidad_neta >= 0 %}bg-green-50 border border-green-200{% else %}bg-red-50 border border-red-200{% endif %}">
+          <div class="flex items-center justify-between">
+            <p class="font-semibold {% if utilidad_neta >= 0 %}text-green-700{% else %}text-red-700{% endif %}">
+              Utilidad Neta Acumulada
+            </p>
+            <p class="text-xl font-bold {% if utilidad_neta >= 0 %}text-green-700{% else %}text-red-700{% endif %}">
+              ${{ "%.2f"|format(utilidad_neta) }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Acciones -->
+      <div class="mt-6 flex justify-end gap-3">
+        <a href="{{ url_for('utilidad.dashboard') }}"
+           class="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+          Regresar
+        </a>
+        <a href="{{ url_for('utilidad.reporte') }}"
+           class="px-5 py-2 bg-brand text-white rounded-lg hover:bg-brand-strong transition">
+          Ver Reporte Completo
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

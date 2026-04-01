@@ -1,0 +1,181 @@
+{% extends "layout.html" %}
+{% block container %}
+{% import "_macros.html" as macros %}
+
+<div class="w-full max-w-7xl mx-auto p-4">
+  <!-- Encabezado -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+        Reporte de Costos y Utilidad
+      </h2>
+      <p class="text-gray-500 dark:text-gray-400 mt-1">
+        Análisis detallado por período
+      </p>
+    </div>
+    <div class="flex gap-2">
+      <a href="{{ url_for('index') }}"
+         class="text-white bg-gray-500 box-border border border-transparent hover:bg-gray-600 focus:ring-4 focus:ring-gray-300 shadow-xs font-medium leading-5 rounded-base text-sm px-5 py-2.5 focus:outline-none inline-flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg>
+        Inicio
+      </a>
+      <a href="{{ url_for('utilidad.dashboard') }}" 
+         class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-5 py-2.5 focus:outline-none inline-flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+        </svg>
+        Dashboard
+      </a>
+    </div>
+  </div>
+
+  <!-- Formulario de fechas -->
+  <div class="bg-white dark:bg-gray-800 rounded-base shadow-xs border border-default p-6 mb-6">
+    <form method="POST" action="{{ url_for('utilidad.reporte') }}" class="flex flex-wrap gap-4 items-end">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      
+      <div class="flex-1 min-w-[200px]">
+        <label for="fecha_inicio" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+          Fecha Inicio
+        </label>
+        {{ form.fecha_inicio(class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs", type="date") }}
+        {% if form.fecha_inicio.errors %}
+          {% for error in form.fecha_inicio.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+          {% endfor %}
+        {% endif %}
+      </div>
+      
+      <div class="flex-1 min-w-[200px]">
+        <label for="fecha_fin" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+          Fecha Fin
+        </label>
+        {{ form.fecha_fin(class="bg-neutral-secondary-medium border border-default-medium text-heading text-sm rounded-base focus:ring-brand focus:border-brand block w-full px-3 py-2.5 shadow-xs", type="date") }}
+        {% if form.fecha_fin.errors %}
+          {% for error in form.fecha_fin.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+          {% endfor %}
+        {% endif %}
+      </div>
+      
+      <button type="submit" 
+              class="text-white bg-brand box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-5 py-2.5 focus:outline-none">
+        Generar Reporte
+      </button>
+    </form>
+  </div>
+  {% if ventas %}
+<form action="{{ url_for('utilidad.reporte_pdf') }}" method="POST" class="inline">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="fecha_inicio" value="{{ form.fecha_inicio.data }}">
+  <input type="hidden" name="fecha_fin" value="{{ form.fecha_fin.data }}">
+  <button type="submit"
+     class="text-white bg-red-600 box-border border border-transparent hover:bg-red-700 focus:ring-4 focus:ring-red-300 shadow-xs font-medium leading-5 rounded-base text-sm px-5 py-2.5 focus:outline-none inline-flex items-center gap-2">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+    </svg>
+    Descargar PDF
+  </button>
+</form>
+{% endif %}
+
+  {% if ventas %}
+  <!-- Resumen del período -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white dark:bg-gray-800 rounded-base shadow-xs border border-default p-4">
+      <p class="text-sm text-gray-500">Total Ventas</p>
+      <p class="text-2xl font-bold text-gray-900">${{ "%.2f"|format(resumen.total_ventas) }}</p>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-base shadow-xs border border-default p-4">
+      <p class="text-sm text-gray-500">Costo de Ventas</p>
+      <p class="text-2xl font-bold text-gray-900">${{ "%.2f"|format(resumen.total_costos) }}</p>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-base shadow-xs border border-default p-4">
+      <p class="text-sm text-gray-500">Utilidad Bruta</p>
+      <p class="text-2xl font-bold text-blue-600">${{ "%.2f"|format(resumen.utilidad_bruta) }}</p>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-base shadow-xs border border-default p-4">
+      <p class="text-sm text-gray-500">Margen Promedio</p>
+      <p class="text-2xl font-bold text-purple-600">{{ "%.1f"|format(resumen.margen_promedio) }}%</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div class="bg-white dark:bg-gray-800 rounded-base shadow-xs border border-default p-4">
+      <h3 class="font-semibold text-gray-900 mb-2">Estadísticas</h3>
+      <div class="space-y-2">
+        <p class="text-sm">Período: {{ fecha_inicio }} - {{ fecha_fin }}</p>
+        <p class="text-sm">Transacciones: {{ resumen.num_transacciones }}</p>
+        <p class="text-sm">Productos vendidos: {{ "%.0f"|format(resumen.productos_vendidos) }} unidades</p>
+      </div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-base shadow-xs border border-default p-4">
+      <h3 class="font-semibold text-gray-900 mb-2">Rentabilidad por Producto</h3>
+      <div class="max-h-64 overflow-y-auto">
+        {% for producto in productos_detalle[:5] %}
+        <div class="flex justify-between items-center py-2 border-b">
+          <span class="text-sm">{{ producto.nombre }}</span>
+          <span class="text-sm font-medium text-green-600">+${{ "%.2f"|format(producto.utilidad) }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Detalle de ventas -->
+  <div class="bg-white dark:bg-gray-800 rounded-base shadow-xs border border-default overflow-hidden">
+    <div class="px-6 py-4 border-b border-default bg-brand-strong">
+      <h3 class="text-lg font-semibold text-white">Detalle de Ventas</h3>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-left">
+        <thead class="bg-gray-50 dark:bg-gray-700">
+          <tr>
+            <th class="px-4 py-3">Fecha</th>
+            <th class="px-4 py-3">Total</th>
+            <th class="px-4 py-3">Costo</th>
+            <th class="px-4 py-3">Utilidad</th>
+            <th class="px-4 py-3">Método</th>
+            <th class="px-4 py-3">Productos</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for venta in ventas %}
+          <tr class="border-b hover:bg-gray-50">
+            <td class="px-4 py-3 text-sm">{{ venta.fecha }}</td>
+            <td class="px-4 py-3 font-medium">${{ "%.2f"|format(venta.total) }}</td>
+            <td class="px-4 py-3 text-orange-600">${{ "%.2f"|format(venta.costo) }}</td>
+            <td class="px-4 py-3 text-green-600">${{ "%.2f"|format(venta.utilidad) }}</td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-1 text-xs rounded-full {% if venta.metodo_pago == 'efectivo' %}bg-green-100 text-green-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+                {{ venta.metodo_pago }}
+              </span>
+            </td>
+            <td class="px-4 py-3">
+              <div class="text-xs space-y-1">
+                {% for p in venta.productos[:2] %}
+                <div>{{ "%.0f"|format(p.cantidad) }}x {{ p.nombre }}</div>
+                {% endfor %}
+                {% if venta.productos|length > 2 %}
+                <div class="text-gray-400">+{{ venta.productos|length - 2 }} más</div>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="bg-white dark:bg-gray-800 rounded-base shadow-xs border border-default p-12 text-center">
+    <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+    </svg>
+    <p class="text-gray-500">Selecciona un rango de fechas para generar el reporte</p>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}
