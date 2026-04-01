@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urban Coffee - Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div class="sidebar-top">
+                <div class="brand-header">
+                    <img src="{{ url_for('static', filename='img/urbanCoffeeLogo.jpeg') }}" alt="Urban Coffee" class="brand-logo">
+                    <span class="brand-fallback">Urban Coffe</span>
+                </div>
+
+                <div class="profile-row">
+                    <div class="avatar">{{ (session.get('usuarioNombre', 'AD')[:2]).upper() }}</div>
+                    <div class="profile-meta">
+                        <p class="name">{{ session.get('usuarioNombre', 'Admin') }}</p>
+                        <p class="role">{{ session.get('usuarioRol', 'Operador') }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="menu">
+                <p class="menu-title">Principal</p>
+                <a href="#" class="menu-item active"><i class="fa-solid fa-table-columns"></i>Dashboard</a>
+                <a href="#" class="menu-item"><i class="fa-solid fa-cash-register"></i>Punto de Venta</a>
+
+                <p class="menu-title">Operación</p>
+                <a href="#" class="menu-item"><i class="fa-regular fa-box"></i>Materias Primas</a>
+                <a href="#" class="menu-item"><i class="fa-regular fa-file-lines"></i>Producto Terminado</a>
+                <a href="#" class="menu-item"><i class="fa-regular fa-clipboard"></i>Solicitudes</a>
+                <a href="#" class="menu-item"><i class="fa-solid fa-gears"></i>Producción</a>
+                <a href="#" class="menu-item"><i class="fa-regular fa-bookmark"></i>Recetas</a>
+
+                <p class="menu-title">Administración</p>
+                <a href="#" class="menu-item"><i class="fa-solid fa-cart-shopping"></i>Compras</a>
+                <a href="#" class="menu-item"><i class="fa-regular fa-building"></i>Proveedores</a>
+                {% if session.get('usuarioRol') == 'Gerente' %}
+                    <a href="{{ url_for('usuarios.index') }}" class="menu-item"><i class="fa-solid fa-users"></i>Usuarios</a>
+                {% endif %}
+                <a href="#" class="menu-item"><i class="fa-solid fa-scale-balanced"></i>Costos y Utilidad</a>
+                <a href="{{ url_for('auth.cerrarSesion') }}" class="menu-item logout"><i class="fa-solid fa-right-from-bracket"></i>Cerrar Sesión</a>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <header class="content-header">
+                <div>
+                    <h1>Resumen de Operaciones</h1>
+                    <p>Métricas operativas y comportamiento de ventas</p>
+                </div>
+                <form method="GET" class="period-form">
+                    <label for="periodo">Período</label>
+                    <select id="periodo" name="periodo" onchange="this.form.submit()">
+                        <option value="7" {% if periodoSeleccionado == 7 %}selected{% endif %}>Últimos 7 días</option>
+                        <option value="15" {% if periodoSeleccionado == 15 %}selected{% endif %}>Últimos 15 días</option>
+                        <option value="30" {% if periodoSeleccionado == 30 %}selected{% endif %}>Últimos 30 días</option>
+                    </select>
+                </form>
+            </header>
+
+            <section class="stats-grid">
+                <article class="stat-card">
+                    <p class="stat-label">Total ventas del día</p>
+                    {% if puedeVerFinanzas %}
+                        <div class="stat-main">${{ '%.2f'|format(totalVentasDia) }}</div>
+                        <p class="stat-sub">Solo transacciones concretadas</p>
+                    {% else %}
+                        <div class="stat-main">--</div>
+                        <p class="stat-sub">Disponible solo para Gerente</p>
+                    {% endif %}
+                </article>
+
+                <article class="stat-card">
+                    <p class="stat-label">Utilidad bruta del día</p>
+                    {% if puedeVerFinanzas %}
+                        <div class="stat-main">${{ '%.2f'|format(utilidadBrutaDia) }}</div>
+                        <p class="stat-sub">Ingresos menos costo estimado</p>
+                    {% else %}
+                        <div class="stat-main">--</div>
+                        <p class="stat-sub">Disponible solo para Gerente</p>
+                    {% endif %}
+                </article>
+
+                <article class="stat-card">
+                    <p class="stat-label">Número de tickets</p>
+                    {% if puedeVerFinanzas %}
+                        <div class="stat-main">{{ numeroTicketsDia }}</div>
+                        <p class="stat-sub">Transacciones registradas hoy</p>
+                    {% else %}
+                        <div class="stat-main">--</div>
+                        <p class="stat-sub">Disponible solo para Gerente</p>
+                    {% endif %}
+                </article>
+            </section>
+
+            <section class="chart-card">
+                <div class="chart-head">
+                    <h2>Ventas por día ({{ periodoSeleccionado }} días)</h2>
+                </div>
+
+                <div class="chart-box">
+                    <div class="bars-grid">
+                        {% set maximo = (puntosGrafica|max) if puntosGrafica else 0 %}
+                        {% for valor in puntosGrafica %}
+                            {% set altura = ((valor / maximo) * 100) if maximo > 0 else 0 %}
+                            <div class="bar-col">
+                                <div class="bar" style="height: {{ '%.2f'|format(altura) }}%;" title="${{ '%.2f'|format(valor) }}"></div>
+                                <span>{{ etiquetasGrafica[loop.index0] }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </section>
+
+            <section class="info-grid">
+                <article class="info-card">
+                    <h3>Top productos vendidos</h3>
+                    <ul>
+                        {% for nombre, cantidad in topProductos %}
+                            <li>
+                                <span>{{ loop.index }}. {{ nombre }}</span>
+                                <strong>{{ cantidad }} uds</strong>
+                            </li>
+                        {% else %}
+                            <li class="empty-item">Sin ventas en el período seleccionado.</li>
+                        {% endfor %}
+                    </ul>
+                </article>
+
+                <article class="info-card">
+                    <h3>Últimas operaciones</h3>
+                    <ul>
+                        {% for venta in ultimasOperaciones %}
+                            <li>
+                                <span>Ticket #{{ venta.id }} · {{ venta.origen }}</span>
+                                {% if puedeVerFinanzas %}
+                                    <strong>${{ '%.2f'|format(venta.total) }}</strong>
+                                {% else %}
+                                    <strong>{{ venta.creadoEn.strftime('%d/%m %H:%M') if venta.creadoEn else '-' }}</strong>
+                                {% endif %}
+                            </li>
+                        {% else %}
+                            <li class="empty-item">Sin operaciones registradas.</li>
+                        {% endfor %}
+                    </ul>
+                </article>
+
+                <article class="info-card alerts">
+                    <h3>Alertas de insumos bajo mínimo</h3>
+                    <ul>
+                        {% for insumo in alertasInsumos %}
+                            <li>
+                                <span>{{ insumo.nombre }}</span>
+                                <strong class="low">{{ insumo.stockActual }} / min {{ insumo.stockMinimo }}</strong>
+                            </li>
+                        {% else %}
+                            <li class="ok-item">Sin alertas críticas por ahora.</li>
+                        {% endfor %}
+                    </ul>
+                </article>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+</body>
+</html>

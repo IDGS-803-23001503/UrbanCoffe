@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urban Coffee - Registro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gray-100">
+    <section class="min-h-screen">
+        <div class="grid min-h-screen grid-cols-1 lg:grid-cols-2">
+            <div class="hidden lg:block">
+                <img
+                    src="{{ url_for('static', filename='img/Caffe Login.jpg') }}"
+                    alt="Tazas de café"
+                    class="h-full w-full object-cover"
+                />
+            </div>
+
+            <div class="flex items-center justify-center px-4 py-10 sm:px-6 lg:px-16 bg-white">
+                <div class="w-full max-w-md rounded-lg border border-gray-200 bg-white p-8 shadow-[0_14px_36px_rgba(15,23,42,0.10)]">
+                    <div class="mb-8">
+                        <img src="{{ url_for('static', filename='img/urbanCoffeeLogo.jpeg') }}" alt="Urban Coffee" class="h-12 w-auto" />
+                        <h1 class="mt-5 text-3xl font-bold tracking-tight text-gray-900">Crea tu cuenta</h1>
+                        <p class="mt-2 text-sm text-gray-500">Regístrate para acceder a Urban Coffee.</p>
+                    </div>
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            <div class="mb-6 space-y-3">
+                                {% for category, message in messages %}
+                                    {% if category == 'danger' %}
+                                        <div class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ message }}</div>
+                                    {% elif category == 'success' %}
+                                        <div class="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{{ message }}</div>
+                                    {% else %}
+                                        <div class="rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">{{ message }}</div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" action="{{ url_for('auth.registrarUsuario') }}" class="space-y-5">
+                        <div>
+                            <label for="nombre" class="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">Nombre</label>
+                            <input
+                                id="nombre"
+                                name="nombre"
+                                type="text"
+                                required
+                                class="block w-full rounded-md border border-gray-300 bg-white p-3 text-sm text-gray-900 focus:border-slate-500 focus:ring-slate-500"
+                                placeholder="Tu nombre"
+                            />
+                        </div>
+
+                        <div>
+                            <label for="correo" class="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">Correo electrónico</label>
+                            <input
+                                id="correo"
+                                name="correo"
+                                type="email"
+                                required
+                                class="block w-full rounded-md border border-gray-300 bg-white p-3 text-sm text-gray-900 focus:border-slate-500 focus:ring-slate-500"
+                                placeholder="nombre@urbancoffee.com"
+                            />
+                        </div>
+
+                        <div>
+                            <label for="contrasena" class="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">Contraseña</label>
+                            <input
+                                id="contrasena"
+                                name="contrasena"
+                                type="password"
+                                required
+                                class="block w-full rounded-md border border-gray-300 bg-white p-3 text-sm text-gray-900 focus:border-slate-500 focus:ring-slate-500"
+                                placeholder="••••••••"
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="w-full rounded-md bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300"
+                        >
+                            Registrar
+                        </button>
+
+                        <p class="text-center text-sm text-gray-600">
+                            ¿Ya tienes cuenta?
+                            <a href="{{ url_for('auth.iniciarSesion') }}" class="font-semibold text-slate-700 hover:text-slate-900">Iniciar sesión</a>
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+</body>
+</html>

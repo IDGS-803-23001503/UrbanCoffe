@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urban Coffee - Directorio de Usuarios</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/usuarios.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="usuarios-layout">
+        <aside class="sidebar">
+            <div class="sidebar-top">
+                <div class="brand-header">
+                    <img src="{{ url_for('static', filename='img/urbanCoffeeLogo.jpeg') }}" alt="Urban Coffee" class="brand-logo">
+                    <span class="brand-fallback">Urban Coffe</span>
+                </div>
+
+                <div class="profile-row">
+                    <div class="avatar">{{ (session.get('usuarioNombre', 'AD')[:2]).upper() }}</div>
+                    <div class="profile-meta">
+                        <p class="name">{{ session.get('usuarioNombre', 'Admin') }}</p>
+                        <p class="role">{{ session.get('usuarioRol', 'Administrador') }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="menu">
+                <p class="menu-title">Principal</p>
+                {% if session.get('usuarioRol') == 'Gerente' %}
+                    <a href="{{ url_for('dashboard_gerente') }}" class="menu-item"><i class="fa-solid fa-table-columns"></i>Dashboard</a>
+                {% else %}
+                    <a href="{{ url_for('dashboard_operador') }}" class="menu-item"><i class="fa-solid fa-table-columns"></i>Dashboard</a>
+                {% endif %}
+                <a href="#" class="menu-item"><i class="fa-solid fa-cash-register"></i>Punto de Venta</a>
+
+                <p class="menu-title">Operación</p>
+                <a href="#" class="menu-item"><i class="fa-regular fa-box"></i>Materias Primas</a>
+                <a href="#" class="menu-item"><i class="fa-regular fa-file-lines"></i>Producto Terminado</a>
+                <a href="#" class="menu-item"><i class="fa-regular fa-clipboard"></i>Solicitudes</a>
+                <a href="#" class="menu-item"><i class="fa-solid fa-gears"></i>Producción</a>
+                <a href="#" class="menu-item"><i class="fa-regular fa-bookmark"></i>Recetas</a>
+
+                <p class="menu-title">Administración</p>
+                <a href="#" class="menu-item"><i class="fa-solid fa-cart-shopping"></i>Compras</a>
+                <a href="#" class="menu-item"><i class="fa-regular fa-building"></i>Proveedores</a>
+                <a href="{{ url_for('usuarios.index') }}" class="menu-item active"><i class="fa-solid fa-users"></i>Usuarios</a>
+                <a href="#" class="menu-item"><i class="fa-solid fa-scale-balanced"></i>Costos y Utilidad</a>
+                <a href="{{ url_for('auth.cerrarSesion') }}" class="menu-item logout"><i class="fa-solid fa-right-from-bracket"></i>Cerrar Sesión</a>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <header class="content-header">
+                <h1>Directorio de Usuarios</h1>
+                <a href="{{ url_for('usuarios.nuevo') }}" class="new-user-btn"><i class="fa-solid fa-plus"></i>Nuevo Usuario</a>
+            </header>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="alerts-stack">
+                        {% for category, message in messages %}
+                            <div class="alert-item {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <section class="users-card">
+                <form method="GET" action="{{ url_for('usuarios.index') }}" class="search-form">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" name="q" value="{{ terminoBusqueda or '' }}" placeholder="Buscar usuario..." autocomplete="off">
+                </form>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nombre / Usuario</th>
+                                <th>Correo</th>
+                                <th>Rol Asignado</th>
+                                <th>Estado</th>
+                                <th class="right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for usuario in usuarios %}
+                                <tr>
+                                    <td>
+                                        <p class="user-name">{{ usuario.nombre }}</p>
+                                        <p class="user-mail">@{{ usuario.usuario or 'sin-usuario' }}</p>
+                                    </td>
+                                    <td class="user-mail">{{ usuario.correo }}</td>
+                                    <td class="role-cell">{{ usuario.rol }}</td>
+                                    <td>
+                                        {% if usuario.estado == 'Activo' %}
+                                            <span class="status-badge ok"><i class="fa-solid fa-circle"></i>Óptimo</span>
+                                        {% else %}
+                                            <span class="status-badge suspended"><i class="fa-solid fa-triangle-exclamation"></i>Suspendido</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="right actions-cell">
+                                        <a href="{{ url_for('usuarios.editar', idUsuario=usuario.id) }}" class="edit-link">Editar</a>
+                                        {% if usuario.estado == 'Activo' %}
+                                            <form method="POST" action="{{ url_for('usuarios.desactivar', idUsuario=usuario.id) }}" onsubmit="return confirm('¿Seguro que deseas desactivar este usuario?');">
+                                                <button type="submit" class="deactivate-link">Suspender</button>
+                                            </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="empty-state">
+                                        {% if terminoBusqueda %}
+                                            No hay coincidencias para “{{ terminoBusqueda }}”.
+                                        {% else %}
+                                            No hay usuarios registrados.
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
