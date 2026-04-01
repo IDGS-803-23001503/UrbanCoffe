@@ -1,0 +1,167 @@
+# === Sistema operativo ===
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+Icon?
+$RECYCLE.BIN/
+.Spotlight-V100/
+.Trashes/
+._*
+
+# === Logs ===
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# === Variables de entorno / secretos ===
+.env
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# === Dependencias ===
+node_modules/
+vendor/
+jspm_packages/
+bower_components/
+
+# === Build / compilados ===
+dist/
+build/
+out/
+target/
+release/
+debug/
+tmp/
+temp/
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+.svelte-kit/
+coverage/
+*.tsbuildinfo
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.python-version
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.venv/
+venv/
+env/
+ENV/
+pip-wheel-metadata/
+.eggs/
+*.egg-info/
+dist/
+build/
+
+# === Java / Kotlin / Gradle ===
+.gradle/
+*.class
+*.jar
+*.war
+*.ear
+out/
+build/
+
+# === Go ===
+bin/
+pkg/
+*.test
+.coverprofile
+
+# === Rust ===
+target/
+Cargo.lock
+
+# === .NET / C# ===
+bin/
+obj/
+*.user
+*.rsuser
+*.suo
+
+# === PHP / Composer ===
+vendor/
+composer.lock
+
+# === Ruby / Rails ===
+.bundle/
+log/
+tmp/
+vendor/bundle/
+db/*.sqlite3
+db/*.sqlite3-journal
+
+# === Base de datos / datos locales ===
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+
+# === Archivos comprimidos ===
+*.7z
+*.gz
+*.zip
+*.tar
+*.tgz
+*.bz2
+*.rar
+
+# === IDEs / editores ===
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+*.swp
+*.swo
+*~
+.history/
+
+# === Docker ===
+.docker/
+docker-compose.override.yml
+
+# === Terraform ===
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform.lock.hcl
+
+# === Serverless ===
+.serverless/
+.aws-sam/
+
+# === Testing ===
+.nyc_output/
+junit.xml
+
+# === Archivos locales del proyecto ===
+.local/
+secrets/venv
+__pycache__
