@@ -4,17 +4,22 @@ from flask import Blueprint, flash, redirect, render_template, request, session,
 from sqlalchemy import or_
 
 from forms import UsuarioActualizarForm, UsuarioCrearForm
-from model import Usuario, db
+from model import Rol, Usuario, db
 
 usuariosBp = Blueprint("usuarios", __name__, url_prefix="/usuarios")
 
 
 def hayOtroGerenteActivo(idUsuarioActual: int) -> bool:
-    return Usuario.query.filter(
-        Usuario.id != idUsuarioActual,
-        Usuario.rol == "Gerente",
-        Usuario.estado == "Activo",
-    ).first() is not None
+    return (
+        Usuario.query.join(Rol, Usuario.rolId == Rol.id)
+        .filter(
+            Usuario.id != idUsuarioActual,
+            Rol.nombre == "Gerente",
+            Usuario.estado == "Activo",
+        )
+        .first()
+        is not None
+    )
 
 
 def requiereRol(rolRequerido: str):
@@ -40,7 +45,7 @@ def requiereRol(rolRequerido: str):
 def index():
     terminoBusqueda = request.args.get("q", "").strip()
 
-    consultaUsuarios = Usuario.query
+    consultaUsuarios = Usuario.query.join(Rol, Usuario.rolId == Rol.id)
     if terminoBusqueda:
         patronBusqueda = f"%{terminoBusqueda}%"
         consultaUsuarios = consultaUsuarios.filter(
@@ -48,7 +53,7 @@ def index():
                 Usuario.nombre.ilike(patronBusqueda),
                 Usuario.usuario.ilike(patronBusqueda),
                 Usuario.correo.ilike(patronBusqueda),
-                Usuario.rol.ilike(patronBusqueda),
+                Rol.nombre.ilike(patronBusqueda),
                 Usuario.estado.ilike(patronBusqueda),
             )
         )
@@ -85,6 +90,11 @@ def crear():
     rol = form.rol.data.strip()
     contrasenaTemporal = form.contrasenaTemporal.data
     estado = form.estado.data.strip()
+    rolRegistro = Rol.query.filter_by(nombre=rol).first()
+
+    if not rolRegistro:
+        flash("El rol seleccionado no existe.", "danger")
+        return render_template("usuarios/nuevo_usuario.html", form=form)
 
     existeUsuario = Usuario.query.filter_by(usuario=usuarioLogin).first()
     if existeUsuario:
@@ -96,7 +106,7 @@ def crear():
         flash("El correo ya está registrado.", "danger")
         return render_template("usuarios/nuevo_usuario.html", form=form)
 
-    usuario = Usuario(nombre=nombre, usuario=usuarioLogin, correo=correo, rol=rol, estado=estado)
+    usuario = Usuario(nombre=nombre, usuario=usuarioLogin, correo=correo, rolId=rolRegistro.id, estado=estado)
 
     usuario.establecerContrasena(contrasenaTemporal)
     usuario.resetearSeguridad()
@@ -135,6 +145,11 @@ def actualizar(idUsuario: int):
     rol = form.rol.data.strip()
     estado = form.estado.data.strip()
     contrasenaTemporal = (form.contrasenaTemporal.data or "")
+    rolRegistro = Rol.query.filter_by(nombre=rol).first()
+
+    if not rolRegistro:
+        flash("El rol seleccionado no existe.", "danger")
+        return render_template("usuarios/editar_usuario.html", usuario=usuario, form=form)
 
     usuarioRepetido = Usuario.query.filter(Usuario.usuario == usuarioLogin, Usuario.id != idUsuario).first()
     if usuarioRepetido:
@@ -154,7 +169,7 @@ def actualizar(idUsuario: int):
     usuario.nombre = nombre
     usuario.usuario = usuarioLogin
     usuario.correo = correo
-    usuario.rol = rol
+    usuario.rolId = rolRegistro.id
     usuario.estado = estado
 
     if contrasenaTemporal:

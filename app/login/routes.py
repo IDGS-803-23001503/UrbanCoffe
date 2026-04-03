@@ -6,44 +6,14 @@ from uuid import uuid4
 
 from flask import Blueprint, current_app, flash, redirect, render_template, request, session, url_for
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
-from sqlalchemy import inspect, text
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from forms import LoginForm, RecuperarContrasenaForm, RegistroUsuarioForm, ResetearContrasenaForm
-from model import RegistroSesion, Usuario, db
+from model import RegistroSesion, Rol, Usuario, db
 
 authBp = Blueprint("auth", __name__)
 
 hashContrasenaSimulada = generate_password_hash("urban-coffee-dummy-password")
-
-
-def asegurarEsquemaUsuarios() -> None:
-    inspector = inspect(db.engine)
-    columnas = {columna["name"] for columna in inspector.get_columns("usuarios")}
-
-    sentenciasMigracion = []
-
-    if "nombre" not in columnas:
-        sentenciasMigracion.append("ALTER TABLE usuarios ADD COLUMN nombre VARCHAR(120) NOT NULL DEFAULT 'Sin nombre'")
-
-    if "estado" not in columnas:
-        sentenciasMigracion.append("ALTER TABLE usuarios ADD COLUMN estado VARCHAR(20) NOT NULL DEFAULT 'Activo'")
-
-    if "usuario" not in columnas:
-        sentenciasMigracion.append("ALTER TABLE usuarios ADD COLUMN usuario VARCHAR(60) NULL")
-
-    for sentencia in sentenciasMigracion:
-        db.session.execute(text(sentencia))
-
-    db.session.execute(text("UPDATE usuarios SET usuario = SUBSTRING_INDEX(correo, '@', 1) WHERE usuario IS NULL OR usuario = ''"))
-
-    db.session.commit()
-
-
-def iniciarModuloAuth(app) -> None:
-    with app.app_context():
-        db.create_all()
-        asegurarEsquemaUsuarios()
 
 
 def serializadorRecuperacion() -> URLSafeTimedSerializer:
@@ -198,9 +168,12 @@ def registrarUsuario():
             consecutivo += 1
             usuarioGenerado = f"{usuarioSugerido}{consecutivo}"
 
-        rolAsignado = "Cliente"
+        rolCliente = Rol.query.filter_by(nombre="Cliente").first()
+        if not rolCliente:
+            flash("No existe el rol Cliente. Contacta al administrador.", "danger")
+            return render_template("login/register.html", form=form)
 
-        usuario = Usuario(nombre=nombre, usuario=usuarioGenerado, correo=correo, rol=rolAsignado, estado="Activo")
+        usuario = Usuario(nombre=nombre, usuario=usuarioGenerado, correo=correo, rolId=rolCliente.id, estado="Activo")
         usuario.establecerContrasena(contrasena)
         usuario.resetearSeguridad()
 

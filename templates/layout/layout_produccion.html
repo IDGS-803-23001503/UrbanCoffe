@@ -48,12 +48,12 @@
 
       <p class="text-xs text-gray-400 font-semibold px-2 mt-4 mb-2 uppercase">Operación</p>
 
-      <a href="{{ url_for('inventario.materias_primas') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
+      <a href="{{ safe_url_for('inventario.materias_primas') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
         <i class="fa-solid fa-boxes-stacked w-5"></i>
         <span>Materias Primas</span>
       </a>
 
-      <a href="{{ url_for('producto.producto_index') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
+      <a href="{{ safe_url_for('producto.producto_index') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
         <i class="fa-solid fa-mug-hot w-5"></i>
         <span>Productos</span>
       </a>
@@ -80,7 +80,7 @@
         <span>Compras</span>
       </a>
 
-      <a href="{{ url_for('proveedor.proveedores') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
+      <a href="{{ safe_url_for('proveedor.proveedores') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
         <i class="fa-solid fa-truck w-5"></i>
         <span>Proveedores</span>
       </a>

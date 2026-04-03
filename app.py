@@ -4,13 +4,15 @@ from decimal import Decimal
 from flask import Flask, abort, redirect, render_template, request, session, url_for
 from sqlalchemy import func
 from sqlalchemy.exc import OperationalError
+from werkzeug.routing import BuildError
 
 from config import Config
-from app.login.routes import authBp, endpointDashboardRol, iniciarModuloAuth, usuarioAutenticado
+from db_init import inicializar_db
+from app.login.routes import authBp, endpointDashboardRol, usuarioAutenticado
 from app.producto_terminado.routes import producto_bp
 from app.usuarios.routes import usuariosBp
 from app.ventas.routes import ventasBp
-from model import DetalleVenta, MateriaPrima, ProductoTerminado, Usuario, Venta, db
+from model import DetalleVenta, MateriaPrima, ProductoTerminado, Rol, Usuario, Venta, db
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -25,10 +27,11 @@ app.register_blueprint(producto_bp, url_prefix="/productos")
 app.register_blueprint(usuariosBp)
 app.register_blueprint(ventasBp)
 try:
-    iniciarModuloAuth(app)
+    with app.app_context():
+        inicializar_db()
 except OperationalError as exc:
     raise RuntimeError(
-        "No fue posible conectar a MySQL."
+        f"No fue posible inicializar MySQL: {exc}"
     ) from exc
 
 
@@ -58,7 +61,7 @@ def sembrarDatosDashboard() -> None:
     if Venta.query.count() > 0:
         return
 
-    usuario = Usuario.query.filter_by(rol="Gerente").first() or Usuario.query.first()
+    usuario = Usuario.query.join(Rol, Usuario.rolId == Rol.id).filter(Rol.nombre == "Gerente").first() or Usuario.query.first()
     productos = ProductoTerminado.query.filter_by(activo=True).order_by(ProductoTerminado.id.asc()).all()
     if not usuario or not productos:
         return
@@ -118,6 +121,17 @@ def sembrarDatosDashboard() -> None:
 
 with app.app_context():
     sembrarDatosDashboard()
+
+
+@app.context_processor
+def utilidadesTemplate():
+    def safe_url_for(endpoint: str, **values):
+        try:
+            return url_for(endpoint, **values)
+        except BuildError:
+            return "#"
+
+    return {"safe_url_for": safe_url_for}
 
 
 def construirContextoDashboard(periodoDias: int, puedeVerFinanzas: bool) -> dict:

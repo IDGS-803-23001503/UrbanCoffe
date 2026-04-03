@@ -5,6 +5,12 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 db = SQLAlchemy()
 
+class Rol(db.Model):
+    __tablename__ = "roles"
+
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(20), nullable=False, unique=True, index=True)
+
 
 class Usuario(db.Model):
     __tablename__ = "usuarios"
@@ -14,12 +20,18 @@ class Usuario(db.Model):
     usuario = db.Column(db.String(60), unique=True, nullable=True, index=True)
     correo = db.Column(db.String(120), unique=True, nullable=False, index=True)
     contrasenaHash = db.Column("password_hash", db.String(255), nullable=False)
-    rol = db.Column(db.String(20), nullable=False)
+    rolId = db.Column("rol_id", db.Integer, db.ForeignKey("roles.id"), nullable=False, index=True)
     estado = db.Column(db.String(20), nullable=False, default="Activo")
     intentosFallidos = db.Column("intentos_fallidos", db.Integer, nullable=False, default=0)
     cuentaBloqueada = db.Column("cuenta_bloqueada", db.Boolean, nullable=False, default=False)
     bloqueoHasta = db.Column("bloqueo_hasta", db.DateTime(timezone=True), nullable=True)
     creadoEn = db.Column("creado_en", db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+
+    rolRef = db.relationship("Rol", backref=db.backref("usuarios", lazy=True))
+
+    @property
+    def rol(self) -> str:
+        return self.rolRef.nombre if self.rolRef else ""
 
     def establecerContrasena(self, contrasena: str) -> None:
         self.contrasenaHash = generate_password_hash(contrasena)
