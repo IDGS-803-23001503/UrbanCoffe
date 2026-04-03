@@ -244,7 +244,7 @@ def index():
     if usuarioAutenticado():
         endpointRol = endpointDashboardRol(session.get("usuarioRol", "Operador"))
         return redirect(url_for(endpointRol))
-    return redirect(url_for("auth.iniciarSesion"))
+    return render_template("index.html")
 
 
 @app.route("/dashboard/gerente")

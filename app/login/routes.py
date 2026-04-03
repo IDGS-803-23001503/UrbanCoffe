@@ -9,6 +9,7 @@ from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from sqlalchemy import inspect, text
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from forms import LoginForm, RecuperarContrasenaForm, RegistroUsuarioForm, ResetearContrasenaForm
 from model import RegistroSesion, Usuario, db
 
 authBp = Blueprint("auth", __name__)
@@ -107,9 +108,10 @@ def endpointDashboardRol(rol: str) -> str:
 
 @authBp.route("/login", methods=["GET", "POST"], endpoint="iniciarSesion")
 def iniciarSesion():
-    if request.method == "POST":
-        identificador = request.form.get("correo", "").strip().lower()
-        contrasena = request.form.get("contrasena", "")
+    form = LoginForm()
+    if form.validate_on_submit():
+        identificador = form.correo.data.strip().lower()
+        contrasena = form.contrasena.data
 
         errorGenerico = "Usuario o contraseña incorrectos"
         usuario = Usuario.query.filter(
@@ -119,17 +121,17 @@ def iniciarSesion():
         if not usuario:
             check_password_hash(hashContrasenaSimulada, contrasena)
             flash(errorGenerico, "danger")
-            return render_template("login.html")
+            return render_template("login/login.html", form=form)
 
         if usuario.estado != "Activo":
             check_password_hash(hashContrasenaSimulada, contrasena)
             flash(errorGenerico, "danger")
-            return render_template("login.html")
+            return render_template("login/login.html", form=form)
 
         if usuario.estaBloqueada():
             db.session.commit()
             flash("Cuenta bloqueada temporalmente.", "warning")
-            return render_template("login.html")
+            return render_template("login/login.html", form=form)
 
         if not usuario.validarContrasena(contrasena):
             usuario.registrarIntentoFallido(maxIntentos=3, minutosBloqueo=15)
@@ -140,7 +142,7 @@ def iniciarSesion():
             else:
                 flash(errorGenerico, "danger")
 
-            return render_template("login.html")
+            return render_template("login/login.html", form=form)
 
         usuario.resetearSeguridad()
 
@@ -167,24 +169,27 @@ def iniciarSesion():
 
         return redirect(url_for(endpointDashboardRol(usuario.rol)))
 
-    return render_template("login.html")
+    if request.method == "POST":
+        for erroresCampo in form.errors.values():
+            if erroresCampo:
+                flash(erroresCampo[0], "danger")
+                break
+
+    return render_template("login/login.html", form=form)
 
 
 @authBp.route("/register", methods=["GET", "POST"], endpoint="registrarUsuario")
 def registrarUsuario():
-    if request.method == "POST":
-        nombre = request.form.get("nombre", "").strip()
-        correo = request.form.get("correo", "").strip().lower()
-        contrasena = request.form.get("contrasena", "")
-
-        if not nombre or not correo or not contrasena:
-            flash("Completa todos los campos requeridos.", "danger")
-            return render_template("register.html")
+    form = RegistroUsuarioForm()
+    if form.validate_on_submit():
+        nombre = form.nombre.data.strip()
+        correo = form.correo.data.strip().lower()
+        contrasena = form.contrasena.data
 
         existe = Usuario.query.filter_by(correo=correo).first()
         if existe:
             flash("El correo ya está registrado.", "danger")
-            return render_template("register.html")
+            return render_template("login/register.html", form=form)
 
         usuarioSugerido = correo.split("@")[0]
         consecutivo = 0
@@ -205,18 +210,29 @@ def registrarUsuario():
         flash("Registro completado. Ahora puedes iniciar sesión.", "success")
         return redirect(url_for("auth.iniciarSesion"))
 
-    return render_template("register.html")
+    if request.method == "POST":
+        for erroresCampo in form.errors.values():
+            if erroresCampo:
+                flash(erroresCampo[0], "danger")
+                break
+
+    return render_template("login/register.html", form=form)
 
 
 @authBp.route("/forgot-password", methods=["GET", "POST"], endpoint="recuperarContrasena")
 def recuperarContrasena():
+    form = RecuperarContrasenaForm()
     if request.method == "GET":
-        return render_template("auth/forgot_password.html")
+        return render_template("login/forgot_password.html", form=form)
 
-    correo = request.form.get("correo", "").strip().lower()
-    if not correo:
-        flash("Ingresa un correo válido.", "danger")
-        return render_template("auth/forgot_password.html")
+    if not form.validate_on_submit():
+        for erroresCampo in form.errors.values():
+            if erroresCampo:
+                flash(erroresCampo[0], "danger")
+                break
+        return render_template("login/forgot_password.html", form=form)
+
+    correo = form.correo.data.strip().lower()
 
     usuario = Usuario.query.filter_by(correo=correo).first()
 
@@ -231,17 +247,19 @@ def recuperarContrasena():
             if current_app.debug:
                 flash("SMTP no disponible. Enlace temporal (solo desarrollo):", "warning")
                 flash(enlace, "info")
-                return render_template("auth/forgot_password.html")
+                return render_template("login/forgot_password.html", form=form)
 
             flash("No se pudo enviar el correo de recuperación en este momento.", "danger")
-            return render_template("auth/forgot_password.html")
+            return render_template("login/forgot_password.html", form=form)
 
     flash("Si el correo existe, recibirás instrucciones para recuperar tu contraseña.", "info")
-    return render_template("auth/forgot_password.html")
+    return render_template("login/forgot_password.html", form=form)
 
 
 @authBp.route("/reset-password/<token>", methods=["GET", "POST"], endpoint="resetearContrasena")
 def resetearContrasena(token: str):
+    form = ResetearContrasenaForm()
+
     try:
         datos = serializadorRecuperacion().loads(token, max_age=1800)
     except SignatureExpired:
@@ -257,18 +275,16 @@ def resetearContrasena(token: str):
         return redirect(url_for("auth.recuperarContrasena"))
 
     if request.method == "GET":
-        return render_template("auth/reset_password.html")
+        return render_template("login/reset_password.html", form=form)
 
-    nuevaContrasena = request.form.get("contrasena", "")
-    confirmarContrasena = request.form.get("confirmarContrasena", "")
+    if not form.validate_on_submit():
+        for erroresCampo in form.errors.values():
+            if erroresCampo:
+                flash(erroresCampo[0], "danger")
+                break
+        return render_template("login/reset_password.html", form=form)
 
-    if not nuevaContrasena or len(nuevaContrasena) < 8:
-        flash("La nueva contraseña debe tener al menos 8 caracteres.", "danger")
-        return render_template("auth/reset_password.html")
-
-    if nuevaContrasena != confirmarContrasena:
-        flash("Las contraseñas no coinciden.", "danger")
-        return render_template("auth/reset_password.html")
+    nuevaContrasena = form.contrasena.data
 
     usuario.establecerContrasena(nuevaContrasena)
     usuario.resetearSeguridad()

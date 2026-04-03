@@ -12,7 +12,7 @@
         <div class="grid min-h-screen grid-cols-1 lg:grid-cols-2">
             <div class="hidden lg:block">
                 <img
-                    src="{{ url_for('static', filename='img/Caffe Login.jpg') }}"
+                    src="{{ url_for('static', filename='src/imagenes/otros/Caffe Login.jpg') }}"
                     alt="Tazas de café"
                     class="h-full w-full object-cover"
                 />
@@ -21,7 +21,7 @@
             <div class="flex items-center justify-center px-4 py-10 sm:px-6 lg:px-16 bg-white">
                 <div class="w-full max-w-md rounded-lg border border-gray-200 bg-white p-8 shadow-[0_14px_36px_rgba(15,23,42,0.10)]">
                     <div class="mb-8">
-                        <img src="{{ url_for('static', filename='img/urbanCoffeeLogo.jpeg') }}" alt="Urban Coffee" class="h-12 w-auto" />
+                        <img src="{{ url_for('static', filename='src/imagenes/otros/logo.png') }}" alt="Urban Coffee" class="h-12 w-auto" />
                         <h1 class="mt-5 text-3xl font-bold tracking-tight text-gray-900">Crea tu cuenta</h1>
                         <p class="mt-2 text-sm text-gray-500">Regístrate para acceder a Urban Coffee.</p>
                     </div>
@@ -43,6 +43,7 @@
                     {% endwith %}
 
                     <form method="POST" action="{{ url_for('auth.registrarUsuario') }}" class="space-y-5">
+                        {{ form.hidden_tag() }}
                         <div>
                             <label for="nombre" class="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">Nombre</label>
                             <input
