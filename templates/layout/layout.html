@@ -8,6 +8,7 @@
   <title>Urban Coffee</title>
   <link rel="icon" type="image/png" href="{{url_for('static',filename='src/logo_blanco.png')}}">
   <link rel="stylesheet" href="{{url_for('static',filename='dist/output.css')}}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
 <body>
@@ -28,8 +29,11 @@
           id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown"
           data-dropdown-placement="bottom">
           <span class="sr-only">Open user menu</span>
-          <img class="w-8 h-8 rounded-full" src="{{url_for('static',filename='src/imagenes/iconos/Usuario_icon.jpg')}}"
-            alt="usuario Icon">
+
+          <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center">
+            <i class="fas fa-user text-gray-600 text-sm"></i>
+          </div>
+        
         </button>
 
         <div id="user-dropdown"

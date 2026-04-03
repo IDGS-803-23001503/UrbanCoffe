@@ -29,6 +29,7 @@ def proveedores():
     proveedores_list = query.order_by(Proveedores.nombre).all()
 
     return render_template('proveedores/proveedores.html',
+                           active_page="proveedores", 
                            proveedores=proveedores_list,
                            busqueda=busqueda,
                            estado=estado)
@@ -60,14 +61,14 @@ def nuevo_proveedor():
                 db.session.rollback()
                 flash('Error: No se pudo registrar el proveedor. Verifica los datos.', 'error')
 
-    return render_template('proveedores/nuevo_proveedor.html', form=form)
+    return render_template('proveedores/nuevo_proveedor.html', active_page="proveedores", form=form)
 
 
 @proveedor_bp.route('/proveedores/detalle/<int:id>')
 def detalle(id):
 
     proveedor = db.get_or_404(Proveedores, id)
-    return render_template('proveedores/detalleProve.html', proveedor=proveedor)
+    return render_template('proveedores/detalleProve.html', active_page="proveedores", proveedor=proveedor)
 
 
 @proveedor_bp.route('/proveedores/modificar/<int:id>', methods=['GET', 'POST'])
@@ -98,7 +99,7 @@ def modificar(id):
                 db.session.rollback()
                 flash('Error: No se pudo actualizar el proveedor.', 'error')
 
-    return render_template('proveedores/modificarProve.html', form=form, proveedor=proveedor)
+    return render_template('proveedores/modificarProve.html', active_page="proveedores", form=form, proveedor=proveedor)
 
 
 @proveedor_bp.route('/proveedores/eliminar/<int:id>', methods=['GET', 'POST'])
@@ -117,7 +118,7 @@ def eliminar(id):
 
         return redirect(url_for('proveedores.index'))
 
-    return render_template('proveedores/eliminarProve.html', proveedor=proveedor)
+    return render_template('proveedores/eliminarProve.html', active_page="proveedores",  proveedor=proveedor)
 
 
 @proveedor_bp.route('/proveedores/reactivar/<int:id>')

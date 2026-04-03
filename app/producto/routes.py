@@ -18,7 +18,7 @@ def producto_index():
         
     productos = query.all()    
         
-    return render_template('productos/productos.html', productos=productos, busqueda=busqueda, categoria_actual=categoria)
+    return render_template('productos/productos.html', active_page="productos", productos=productos, busqueda=busqueda, categoria_actual=categoria)
 
 
 @producto_bp.route('/nuevo_producto', methods=['GET', 'POST'])
@@ -39,6 +39,7 @@ def nuevo_producto():
             )
         if imagen_base64 and len(imagen_base64) > 2_000_000:
             return render_template('productos/nuevo_producto.html',
+                                   
                                     mostrar_modal=False,
                                     error="La imagen es demasiado grande"
     )
@@ -65,11 +66,13 @@ def nuevo_producto():
 
         return render_template(
             'productos/nuevo_producto.html',
+            active_page="productos",
             mostrar_modal=True
         )
 
     return render_template(
         'productos/nuevo_producto.html',
+        active_page="productos",
         mostrar_modal=False
     )
 
@@ -89,7 +92,7 @@ def editar_producto(id):
         
         return render_template('productos/editar_producto.html', mostrar_modal=True, producto=producto)
     
-    return render_template('productos/editar_producto.html', mostrar_modal=False, producto=producto)
+    return render_template('productos/editar_producto.html', active_page="productos", mostrar_modal=False, producto=producto)
 
 @producto_bp.route('/catalogo_venta')
 def producto_venta():
