@@ -1,0 +1,100 @@
+{% extends "layout.html" %}
+{% block container %}
+
+<div class="w-full max-w-4xl mx-auto p-4">
+  <!-- Encabezado -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+        Detalle de Compra #{{ compra.id_compra }}
+      </h2>
+      <p class="text-gray-500 dark:text-gray-400 mt-1">
+        Información completa de la compra
+      </p>
+    </div>
+    <a href="{{ url_for('compras.listar') }}"
+       class="text-white bg-gray-500 box-border border border-transparent hover:bg-gray-600 focus:ring-4 focus:ring-gray-300 shadow-xs font-medium leading-5 rounded-base text-sm px-5 py-2.5 focus:outline-none inline-flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+      </svg>
+      Regresar
+    </a>
+  </div>
+
+  <!-- Card principal -->
+  <div class="bg-white dark:bg-gray-800 rounded-base shadow-xs border border-default overflow-hidden">
+    <div class="bg-brand-strong px-6 py-4">
+      <h3 class="text-xl font-bold text-white">Compra #{{ compra.id_compra }}</h3>
+      <p class="text-white text-sm opacity-90 mt-1">
+        {{ compra.fecha.strftime('%d/%m/%Y %H:%M') if compra.fecha else 'N/A' }}
+      </p>
+    </div>
+
+    <div class="p-6">
+      <!-- Información del proveedor -->
+      <div class="mb-6">
+        <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Proveedor</h4>
+        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+          <p class="font-medium text-gray-900 dark:text-white">{{ compra.proveedor.nombre if compra.proveedor else 'N/A' }}</p>
+          <p class="text-sm text-gray-500">RFC: {{ compra.proveedor.RFC if compra.proveedor else 'N/A' }}</p>
+          <p class="text-sm text-gray-500">Tel: {{ compra.proveedor.telefono if compra.proveedor else 'N/A' }}</p>
+        </div>
+      </div>
+
+      <!-- Detalle de insumos -->
+      <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Insumos Comprados</h4>
+      <div class="overflow-x-auto rounded-lg border border-default">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-100 dark:bg-gray-700 text-xs uppercase text-gray-500">
+            <tr>
+              <th class="px-4 py-3 text-left">Insumo</th>
+              <th class="px-4 py-3 text-right">Cantidad</th>
+              <th class="px-4 py-3 text-right">Unidad</th>
+              <th class="px-4 py-3 text-right">Costo Unitario</th>
+              <th class="px-4 py-3 text-right">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+            {% for detalle in compra.detalles %}
+            <tr class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+              <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">
+                {{ detalle.materia_prima.nombre if detalle.materia_prima else 'N/A' }}
+              </td>
+              <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300">
+                {{ "%.2f"|format(detalle.cantidad) }}
+              </td>
+              <td class="px-4 py-3 text-right text-gray-500">
+                {{ detalle.unidad_medida.abreviacion if detalle.unidad_medida else 'ud' }}
+              </td>
+              <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300">
+                ${{ "%.2f"|format(detalle.costo_unitario) }}
+              </td>
+              <td class="px-4 py-3 text-right font-semibold text-brand">
+                ${{ "%.2f"|format(detalle.subtotal) }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot class="bg-gray-50 dark:bg-gray-700">
+            <tr>
+              <td colspan="4" class="px-4 py-3 text-right font-bold text-gray-700 dark:text-gray-200">Total</td>
+              <td class="px-4 py-3 text-right font-bold text-brand text-base">
+                ${{ "%.2f"|format(compra.precio_total) }}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- Botón regresar -->
+      <div class="mt-6 flex justify-end">
+        <a href="{{ url_for('compras.listar') }}"
+           class="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+          Regresar a la lista
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
