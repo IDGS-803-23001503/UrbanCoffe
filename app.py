@@ -12,7 +12,7 @@ from app.login.routes import authBp, endpointDashboardRol, usuarioAutenticado
 from app.producto_terminado.routes import producto_bp
 from app.usuarios.routes import usuariosBp
 from app.ventas.routes import ventasBp
-from model import DetalleVenta, MateriaPrima, ProductoTerminado, Rol, Usuario, Venta, db
+from model import DetalleVenta, MateriaPrima, ProductoTerminado, Venta, db
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -33,94 +33,6 @@ except OperationalError as exc:
     raise RuntimeError(
         f"No fue posible inicializar MySQL: {exc}"
     ) from exc
-
-
-def sembrarDatosDashboard() -> None:
-    if ProductoTerminado.query.count() == 0:
-        db.session.add_all(
-            [
-                ProductoTerminado(nombre="Latte 12oz", precio=Decimal("59.00"), stockActual=45, stockMinimo=12, activo=True),
-                ProductoTerminado(nombre="Americano 12oz", precio=Decimal("45.00"), stockActual=60, stockMinimo=15, activo=True),
-                ProductoTerminado(nombre="Capuccino 12oz", precio=Decimal("57.00"), stockActual=35, stockMinimo=10, activo=True),
-                ProductoTerminado(nombre="Moka 12oz", precio=Decimal("63.00"), stockActual=22, stockMinimo=8, activo=True),
-            ]
-        )
-        db.session.commit()
-
-    if MateriaPrima.query.count() == 0:
-        db.session.add_all(
-            [
-                MateriaPrima(nombre="Café molido", unidadMedida="kg", stockActual=Decimal("3.50"), stockMinimo=Decimal("4.00"), costoUnitario=Decimal("220.00"), activa=True),
-                MateriaPrima(nombre="Leche", unidadMedida="L", stockActual=Decimal("8.00"), stockMinimo=Decimal("6.00"), costoUnitario=Decimal("26.00"), activa=True),
-                MateriaPrima(nombre="Jarabe vainilla", unidadMedida="L", stockActual=Decimal("0.70"), stockMinimo=Decimal("1.00"), costoUnitario=Decimal("145.00"), activa=True),
-                MateriaPrima(nombre="Vasos 12oz", unidadMedida="pza", stockActual=Decimal("120"), stockMinimo=Decimal("80"), costoUnitario=Decimal("1.50"), activa=True),
-            ]
-        )
-        db.session.commit()
-
-    if Venta.query.count() > 0:
-        return
-
-    usuario = Usuario.query.join(Rol, Usuario.rolId == Rol.id).filter(Rol.nombre == "Gerente").first() or Usuario.query.first()
-    productos = ProductoTerminado.query.filter_by(activo=True).order_by(ProductoTerminado.id.asc()).all()
-    if not usuario or not productos:
-        return
-
-    hoyBase = datetime.now(timezone.utc).replace(hour=9, minute=0, second=0, microsecond=0)
-    for indiceDia in range(14):
-        fechaDia = hoyBase - timedelta(days=indiceDia)
-
-        for ticket in range(2):
-            venta = Venta(
-                usuarioId=usuario.id,
-                total=Decimal("0.00"),
-                utilidadBruta=Decimal("0.00"),
-                confirmada=True,
-                origen="ONLINE" if (indiceDia + ticket) % 4 == 0 else "POS",
-                creadoEn=fechaDia + timedelta(hours=ticket * 3),
-            )
-            db.session.add(venta)
-            db.session.flush()
-
-            productoPrincipal = productos[(indiceDia + ticket) % len(productos)]
-            productoSecundario = productos[(indiceDia + ticket + 1) % len(productos)]
-
-            items = [
-                (productoPrincipal, (indiceDia % 3) + 1),
-                (productoSecundario, 1),
-            ]
-
-            totalVenta = Decimal("0.00")
-            utilidadVenta = Decimal("0.00")
-
-            for producto, cantidad in items:
-                precioUnitario = Decimal(str(producto.precio))
-                costoUnitario = (precioUnitario * Decimal("0.58")).quantize(Decimal("0.01"))
-                subtotal = (precioUnitario * Decimal(cantidad)).quantize(Decimal("0.01"))
-                utilidadLinea = ((precioUnitario - costoUnitario) * Decimal(cantidad)).quantize(Decimal("0.01"))
-
-                db.session.add(
-                    DetalleVenta(
-                        ventaId=venta.id,
-                        productoId=producto.id,
-                        cantidad=cantidad,
-                        precioUnitario=precioUnitario,
-                        costoUnitario=costoUnitario,
-                        subtotal=subtotal,
-                    )
-                )
-
-                totalVenta += subtotal
-                utilidadVenta += utilidadLinea
-
-            venta.total = totalVenta
-            venta.utilidadBruta = utilidadVenta
-
-    db.session.commit()
-
-
-with app.app_context():
-    sembrarDatosDashboard()
 
 
 @app.context_processor
