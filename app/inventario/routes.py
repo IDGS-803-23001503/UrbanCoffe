@@ -12,7 +12,7 @@ def materias_primas():
     else:
         insumos = MateriaPrima.query.all()
     
-    return render_template('inventario/materia_prima.html', insumos=insumos, busqueda=busqueda)
+    return render_template('inventario/materia_prima.html', active_page="materia", insumos=insumos, busqueda=busqueda)
 
 @inventario_bp.route('/nueva-materia', methods=['GET', 'POST'])
 def nueva_materia():
@@ -35,9 +35,9 @@ def nueva_materia():
         db.session.add(nuevo_insumo)
         db.session.commit()
         
-        return render_template('inventario/nueva_materia.html', mostrar_modal=True, unidades=unidades_db)
+        return render_template('inventario/nueva_materia.html', active_page="materia", mostrar_modal=True, unidades=unidades_db)
     
-    return render_template('inventario/nueva_materia.html', mostrar_modal=False, unidades=unidades_db)
+    return render_template('inventario/nueva_materia.html', active_page="materia",  mostrar_modal=False, unidades=unidades_db)
 
 @inventario_bp.route('/editar-materia/<int:id>', methods=['GET', 'POST'])
 def editar_materia(id):
@@ -53,6 +53,6 @@ def editar_materia(id):
         insumo.estatus = True if estatus_form == '1' else False
         db.session.commit()
         
-        return render_template('inventario/editar_materia.html', mostrar_modal=True, insumo=insumo, unidades=unidades_db)
+        return render_template('inventario/editar_materia.html', active_page="materia", mostrar_modal=True, insumo=insumo, unidades=unidades_db)
     
-    return render_template('inventario/editar_materia.html', mostrar_modal=False, insumo=insumo, unidades=unidades_db)
+    return render_template('inventario/editar_materia.html', active_page="materia", mostrar_modal=False, insumo=insumo, unidades=unidades_db)

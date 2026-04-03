@@ -220,6 +220,7 @@ def requerirLogin():
         "auth.registrarUsuario",
         "auth.recuperarContrasena",
         "auth.resetearContrasena",
+        "producto.producto_venta",
         "home",
         "index",
         "static",
@@ -254,7 +255,7 @@ def dashboard_gerente():
     periodo = request.args.get("periodo", "7")
     periodoDias = int(periodo) if periodo in {"7", "15", "30"} else 7
     contexto = construirContextoDashboard(periodoDias=periodoDias, puedeVerFinanzas=True)
-    return render_template("dashboard/index.html", **contexto)
+    return render_template("dashboard/dashboard.html", active_page="dashboard", **contexto)
 
 
 @app.route("/dashboard/operador")
@@ -264,7 +265,7 @@ def dashboard_operador():
     periodo = request.args.get("periodo", "7")
     periodoDias = int(periodo) if periodo in {"7", "15", "30"} else 7
     contexto = construirContextoDashboard(periodoDias=periodoDias, puedeVerFinanzas=False)
-    return render_template("dashboard/index.html", **contexto)
+    return render_template("dashboard/dashboard.html", **contexto)
 
 
 if __name__ == "__main__":
