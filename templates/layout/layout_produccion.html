@@ -36,7 +36,11 @@
 
       <p class="text-xs text-gray-400 font-semibold px-2 mb-2 uppercase">Principal</p>
 
-      <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-100 text-gray-900">
+      {% if session.get('usuarioRol') == 'Gerente' %}
+      <a href="{{ url_for('dashboard_gerente') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-100 text-gray-900">
+      {% else %}
+      <a href="{{ url_for('dashboard_operador') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-100 text-gray-900">
+      {% endif %}
         <i class="fa-solid fa-chart-line w-5"></i>
         <span>Dashboard</span>
       </a>
