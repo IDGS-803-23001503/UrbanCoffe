@@ -24,11 +24,11 @@
 
     <div class="flex items-center gap-3 px-6 py-4 border-b">
       <div class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-500 text-white font-bold">
-        AD
+        {{ (session.get('usuarioNombre', 'AD')[:2]).upper() }}
       </div>
       <div>
-        <p class="text-sm font-semibold text-gray-700">Admin</p>
-        <p class="text-xs text-gray-400">Administrador</p>
+        <p class="text-sm font-semibold text-gray-700">{{ session.get('usuarioNombre', 'Admin') }}</p>
+        <p class="text-xs text-gray-400">{{ session.get('usuarioRol', 'Administrador') }}</p>
       </div>
     </div>
 
@@ -85,7 +85,7 @@
         <span>Proveedores</span>
       </a>
 
-      <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
+      <a href="{{ safe_url_for('usuarios.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
         <i class="fa-solid fa-users w-5"></i>
         <span>Usuarios</span>
       </a>
