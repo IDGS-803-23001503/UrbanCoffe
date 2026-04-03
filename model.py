@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date
 from sqlalchemy import Enum
 from sqlalchemy.dialects.mysql import LONGTEXT
 
@@ -168,3 +168,28 @@ class DetalleVenta(db.Model):
     precioUnitario = db.Column("precio_unitario", db.Numeric(10, 2), nullable=False, default=0)
     costoUnitario = db.Column("costo_unitario", db.Numeric(10, 2), nullable=False, default=0)
     subtotal = db.Column(db.Numeric(10, 2), nullable=False, default=0)
+    
+# Tabla de merma 
+class Merma(db.Model):
+    id_merma = db.Column(db.Integer, primary_key=True)
+    cantidad = db.Column(db.Numeric(10, 2), nullable = False)
+    fecha = db.Column( db.Date , default=date.today, nullable = False)
+    motivo = db.Column(Enum(
+                            "Error en preparación",
+                            "Derrame o caída",
+                            "Insumo en mal estado",
+                            "Producto caducado",
+                            "Sobrante de producción diaria",
+                            "Falla de refrigeración/almacenaje",
+                            "Muestra o degustación",
+                            "Pérdida no identificada",
+                            "Devolución por cliente", 
+      name='merma_enum'  
+    ), nullable = False)
+    
+    materia_id = db.Column(db.Integer, db.ForeignKey('Materia_prima.id_materia'), nullable=False)
+    materia = db.relationship('MateriaPrima', backref='mermas')
+    
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
+    usuario = db.relationship('Usuario', backref='mermas_registradas')
+    

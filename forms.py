@@ -1,6 +1,7 @@
+from datetime import date
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField
-from wtforms.validators import DataRequired, Length, Email, Optional
+from wtforms import StringField, TextAreaField, DecimalField, SelectField, DateField
+from wtforms.validators import DataRequired, NumberRange, Length, Email, Optional
 
 class ProveedorForm(FlaskForm):
     nombre = StringField('Nombre / Razón Social', validators=[
@@ -24,3 +25,36 @@ class ProveedorForm(FlaskForm):
         Optional(),
         Length(max=255, message='La dirección no puede exceder 255 caracteres')
     ])
+    
+class MermaForm(FlaskForm):
+    
+    cantidad = DecimalField('Cantidad',
+        validators=[
+            DataRequired(message="La cantidad es obligatoria"),
+            NumberRange(min=0, message="La cantidad debe ser mayor a 0")
+        ], places=2)
+    
+    fecha = DateField('Fecha', default= date.today,
+        validators=[
+            DataRequired(message="La fecha es obligatoria")], format='%Y-%m-%d')
+    
+    motivo = SelectField('Motivo',
+        choices=[
+            ("Error en preparación", "Error en preparación"),
+            ("Derrame o caída", "Derrame o caída"),
+            ("Insumo en mal estado", "Insumo en mal estado"),
+            ("Producto caducado", "Producto caducado"),
+            ("Sobrante de producción diaria", "Sobrante de producción diaria"),
+            ("Falla de refrigeración/almacenaje", "Falla de refrigeración/almacenaje"),
+            ("Muestra o degustación", "Muestra o degustación"),
+            ("Pérdida no identificada", "Pérdida no identificada"),
+            ("Devolución por cliente", "Devolución por cliente")
+        ], validators=[DataRequired(message="Selecciona un motivo")])
+    
+    materia_id = SelectField('Materia Prima', coerce=int,
+        validators=[DataRequired(message="Selecciona una materia prima")]
+    )
+    
+    usuario_id = SelectField('Usuario', coerce=int,
+        validators=[DataRequired(message="Selecciona el usuario que lo esta registrando")]
+    )

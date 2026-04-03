@@ -11,6 +11,7 @@ from app.usuarios.routes import usuariosBp
 from app.inventario.routes import inventario_bp
 from app.producto.routes import producto_bp
 from app.proveedores.routes import proveedor_bp
+from app.merma.routes import merma_bp
 from model import DetalleVenta, MateriaPrima, ProductoTerminado, Usuario, Venta, db
 
 app = Flask(__name__)
@@ -26,6 +27,7 @@ app.register_blueprint(usuariosBp)
 app.register_blueprint(inventario_bp)
 app.register_blueprint(producto_bp)
 app.register_blueprint(proveedor_bp)
+app.register_blueprint(merma_bp)
 
 try:
     iniciarModuloAuth(app)
