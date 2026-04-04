@@ -1,0 +1,40 @@
+<script src="https://cdn.tailwindcss.com"></script>
+<div class="flex items-center justify-center min-h-screen bg-gray-50 p-6">
+    <div class="bg-white p-8 rounded-3xl shadow-xl max-w-sm w-full text-center border border-gray-100">
+        <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        
+        <h2 class="text-xl font-black text-gray-800 mb-1">¡Venta Completada!</h2>
+        <p class="text-gray-500 text-sm mb-6">Transacción #{{ ticket[0].id_venta if ticket else '' }}</p>
+
+        <div class="bg-gray-50 p-6 rounded-2xl border-2 border-dashed border-gray-200 text-left mb-6 font-mono text-xs">
+            <img src="{{ url_for('static', filename='img/urbanCoffeeLogo.jpeg') }}" class="h-8 mx-auto mb-4 grayscale opacity-70">
+            <p class="text-center mb-4 uppercase font-bold">Urban Coffee</p>
+            <div class="space-y-2">
+                {% for item in ticket %}
+                <div class="flex justify-between">
+                    <span>{{ item.cantidad }}x {{ item.producto }}</span>
+                    <span>${{ item.subtotal }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="border-t border-gray-300 my-4"></div>
+            <div class="flex justify-between font-bold text-sm">
+                <span>TOTAL</span>
+                <span>${{ ticket[0].total if ticket else '0.00' }}</span>
+            </div>
+            <p class="mt-4 text-[10px] text-gray-400 text-center italic">¡Gracias por su compra!</p>
+        </div>
+
+        <div class="space-y-3">
+            <button onclick="window.print()" class="w-full bg-gray-800 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-black transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                Imprimir Ticket
+            </button>
+            <a href="{{ url_for('ventas.fisica') }}" class="block w-full bg-amber-800 text-white py-3 rounded-xl font-bold hover:bg-amber-900 shadow-lg shadow-amber-100 transition-all">
+                Nueva Venta
+            </a>
+        </div>
+    </div>
+</div>

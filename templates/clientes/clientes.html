@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrar Clientes - Urban Coffee</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gray-50 p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Directorio de Clientes</h1>
+                <p class="text-sm text-gray-500">Gestiona la base de datos de tus clientes frecuentes.</p>
+            </div>
+            <a href="{{ url_for('clientes.nuevo') }}" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-white bg-amber-800 rounded-full hover:bg-amber-900 focus:ring-4 focus:ring-amber-300 transition-all">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                Nuevo Cliente
+            </a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="p-4 mb-4 text-sm rounded-lg {% if category == 'success' %}bg-green-50 text-green-800{% else %}bg-red-50 text-red-800{% endif %}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="relative overflow-hidden bg-white shadow-sm border border-gray-100 sm:rounded-2xl">
+            <table class="w-full text-sm text-left text-gray-500">
+                <thead class="text-xs text-gray-400 uppercase bg-gray-50/50">
+                    <tr>
+                        <th class="px-6 py-4 font-bold">Nombre / Alias</th>
+                        <th class="px-6 py-4 font-bold">Teléfono</th>
+                        <th class="px-6 py-4 font-bold">Estado</th>
+                        <th class="px-6 py-4 font-bold text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for cliente in clientes %}
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                        <th class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                            <div class="flex flex-col">
+                                <span>{{ cliente.nombre }}</span>
+                                <span class="text-xs text-gray-400 font-normal italic">{{ cliente.alias if cliente.alias else 'Sin alias' }}</span>
+                            </div>
+                        </th>
+                        <td class="px-6 py-4">{{ cliente.telefono if cliente.telefono else '---' }}</td>
+                        <td class="px-6 py-4">
+                            {% if cliente.estado == 'Activo' %}
+                                <span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full uppercase">Activo</span>
+                            {% else %}
+                                <span class="bg-gray-100 text-gray-500 text-xs font-bold px-3 py-1 rounded-full uppercase">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-right space-x-2">
+                            <a href="{{ url_for('clientes.editar', idCliente=cliente.id) }}" class="font-semibold text-amber-700 hover:text-amber-900">Editar</a>
+                            <form action="{{ url_for('clientes.desactivar', idCliente=cliente.id) }}" method="POST" class="inline">
+                                <button type="submit" class="font-semibold text-red-600 hover:text-red-800" onclick="return confirm('¿Desactivar cliente?')">Baja</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<script src="https://cdn.tailwindcss.com"></script>
+<div class="p-8 max-w-7xl mx-auto">
+    <div class="flex justify-between items-end mb-8">
+        <div>
+            <h1 class="text-3xl font-black text-gray-900">Historial de Ventas</h1>
+            <p class="text-gray-500">Resumen general de transacciones registradas.</p>
+        </div>
+        <div class="bg-amber-50 text-amber-800 px-6 py-3 rounded-2xl border border-amber-100">
+            <p class="text-xs font-bold uppercase">Ventas Totales</p>
+            <p class="text-2xl font-black">$ {{ ventas | sum(attribute='total') if ventas else '0.00' }}</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+        <table class="w-full text-left">
+            <thead class="bg-gray-50/50 border-b border-gray-100">
+                <tr>
+                    <th class="px-6 py-5 text-xs font-bold text-gray-400 uppercase">Folio</th>
+                    <th class="px-6 py-5 text-xs font-bold text-gray-400 uppercase">Fecha y Hora</th>
+                    <th class="px-6 py-5 text-xs font-bold text-gray-400 uppercase">Método</th>
+                    <th class="px-6 py-5 text-xs font-bold text-gray-400 uppercase">Total</th>
+                    <th class="px-6 py-5 text-xs font-bold text-gray-400 uppercase text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                {% for venta in ventas %}
+                <tr class="hover:bg-gray-50/50 transition-colors">
+                    <td class="px-6 py-4 font-black text-gray-700">#UC-{{ venta.id_venta }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">{{ venta.fecha }}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold {{ 'bg-green-100 text-green-700' if venta.metodo_pago == 'Efectivo' else 'bg-blue-100 text-blue-700' }}">
+                            {{ venta.metodo_pago }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 font-bold text-amber-900">$ {{ venta.total }}</td>
+                    <td class="px-6 py-4 text-right">
+                        <a href="{{ url_for('ventas.ticket', idVenta=venta.id_venta) }}" class="inline-flex items-center text-amber-700 hover:text-amber-900 font-bold text-sm">
+                            Ver Ticket
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
