@@ -1,12 +1,28 @@
-from flask import Blueprint, render_template, session, redirect, url_for
+from flask import Blueprint, render_template, session, redirect, url_for,flash
 from model import db
 from sqlalchemy import text 
-
+from functools import wraps 
+from flask import abort 
+from model import db
 pedidosBp = Blueprint("pedidos", __name__, url_prefix="/pedidos")
 
-# 📦 PEDIDOS DEL CLIENTE
+def requiereRol(rolRequerido: str):
+    def decorador(funcionVista):
+        @wraps(funcionVista)
+        def envuelta(*args, **kwargs):
+            if not session.get("inicioSesion"):
+                return redirect(url_for("auth.iniciarSesion"))
+
+            if session.get("usuarioRol") != rolRequerido:
+                flash("No tienes permisos.", "danger")
+                return redirect(url_for("dashboard_operador"))
+
+            return funcionVista(*args, **kwargs)
+        return envuelta
+    return decorador
 @pedidosBp.route("/mis-pedidos", methods=["GET"], endpoint="mis_pedidos")
 def mis_pedidos():
+    
     # Cambiado de 'Pedido' a 'pedidos' y de 'Ventas' a 'ventas' (ajusta si ventas es con V mayúscula)
     query = text("""
         SELECT p.*, v.codigo_recogida
@@ -19,11 +35,11 @@ def mis_pedidos():
     pedidos = db.session.execute(query, {"cliente": session.get("clienteId")}).fetchall()
     return render_template("pedidos/mis_pedidos.html", pedidos=pedidos)
 
-# 📋 PANEL DEL OPERADOR (BARISTA)
 @pedidosBp.route("/", methods=["GET"], endpoint="index")
+@requiereRol("Operador")
 def index():
-    # La consulta SQL está perfecta, el cambio es cómo procesamos el resultado
-    query = text("""
+    # 1. Consulta para los pedidos (Cabecera)
+    query_pedidos = text("""
         SELECT 
             p.id_pedido, 
             p.id_venta, 
@@ -39,27 +55,45 @@ def index():
         ORDER BY p.hora_recogida ASC
     """)
     
-    # 1. Ejecutamos la consulta
-    result = db.session.execute(query)
-    
-    # 2. CONVERTIMOS A DICCIONARIO: Esto es lo que soluciona el problema.
-    # Transformamos cada fila en un diccionario para que el HTML entienda p.id_pedido
+    result = db.session.execute(query_pedidos)
     pedidos = [dict(row._mapping) for row in result]
-    
-    # Debug opcional: imprime en consola para ver si hay datos
-    # print(f"DEBUG: Pedidos encontrados: {len(pedidos)}")
+
+    # 2. PARA CADA PEDIDO, BUSCAMOS SUS PRODUCTOS
+    # Esto es lo que faltaba para que 'p.detalles' funcione en el HTML
+    for p in pedidos:
+        query_detalles = text("""
+            SELECT dv.cantidad, prod.nombre as nombre_producto
+            FROM detalle_venta dv
+            JOIN Producto prod ON dv.id_producto = prod.id_producto
+            WHERE dv.id_venta = :id_venta
+        """)
+        detalles_result = db.session.execute(query_detalles, {"id_venta": p['id_venta']})
+        # Guardamos la lista de productos dentro del diccionario del pedido
+        p['detalles'] = [dict(row._mapping) for row in detalles_result]
     
     return render_template("pedidos/pedidos.html", pedidos=pedidos)
-# 🔄 CAMBIAR ESTADO
+
 @pedidosBp.route("/<int:idPedido>/estado/<string:estado>", methods=["POST"])
+@requiereRol("Operador")
 def cambiar_estado(idPedido, estado):
-    query = text("""
+    # 1. Obtener el id_venta antes de actualizar nada para saber qué vamos a cobrar
+    query_venta = text("SELECT id_venta FROM pedidos WHERE id_pedido = :id")
+    venta = db.session.execute(query_venta, {"id": idPedido}).fetchone()
+    
+    # 2. Actualizar el estado del pedido (lo que ya hacías)
+    query_update = text("""
         UPDATE pedidos
         SET estado = :estado
         WHERE id_pedido = :id
     """)
-    
-    db.session.execute(query, {"estado": estado, "id": idPedido})
+    db.session.execute(query_update, {"estado": estado, "id": idPedido})
     db.session.commit()
 
+    # 3. LOGICA DE FLUJO:
+    # Si el barista marcó como "Entregado", significa que el cliente está ahí.
+    # ¡Vamos a cobrarle!
+    if estado == 'Entregado' and venta:
+        return redirect(url_for("ventas.pagar_venta_gestion", idVenta=venta.id_venta))
+
+    # Si solo cambió a "Preparando" o "Listo", recargamos el panel de pedidos
     return redirect(url_for("pedidos.index"))

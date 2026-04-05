@@ -4,13 +4,14 @@ from sqlalchemy.exc import OperationalError
 from config import Config
 from model import db
 
-# Importación de los módulos de tus compañeros
+
 from app.login.routes import authBp, endpointDashboardRol, iniciarModuloAuth, usuarioAutenticado
 from app.usuarios.routes import usuariosBp
 from app.ventas.routes import ventasBp
 from app.pedidos.routes import pedidosBp
 from app.clientes.routes import clientesBp
 from app.inventario.routes import inventario_bp
+from app.producto.routes import producto_bp
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -26,6 +27,7 @@ app.register_blueprint(authBp)
 app.register_blueprint(ventasBp)
 app.register_blueprint(pedidosBp)
 app.register_blueprint(usuariosBp)
+app.register_blueprint(producto_bp)
 app.register_blueprint(clientesBp)
 app.register_blueprint(inventario_bp, url_prefix='/inventario')
 

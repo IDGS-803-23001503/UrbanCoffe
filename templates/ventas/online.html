@@ -1,133 +1,206 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Urban Coffee - Pedido Online</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade { animation: fadeIn 0.3s ease-out; }
-    </style>
-</head>
-<body class="bg-gray-50 min-h-screen">
-    <div class="max-w-5xl mx-auto p-4 md:p-8">
+{% extends "layout/layout.html" %}
+
+{% block container %}
+<section class="bg-[#fdfcfb] min-h-screen">
+    <div class="w-full max-w-6xl mx-auto py-12 px-4">
         
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-            <div>
-                <h1 class="text-3xl font-black text-gray-900 tracking-tight">Urban Coffee</h1>
-                <p class="text-gray-500 font-medium">Selecciona tus favoritos y recoge en sucursal.</p>
-            </div>
-            <div class="flex items-center gap-3 bg-white p-2 px-4 rounded-2xl shadow-sm border border-gray-100">
-                <div class="w-10 h-10 bg-amber-800 rounded-full flex items-center justify-center text-white font-bold">
-                    {{ session.get('usuarioCorreo', 'U')[0] | upper }}
-                </div>
-                <div class="text-xs">
-                    <p class="font-bold text-gray-800">¡Hola, {{ session.get('usuarioNombre', 'Cliente') }}!</p>
-                    <p class="text-gray-400">Coffee Lover</p>
-                </div>
-            </div>
+        <div class="flex flex-col items-center mb-12">
+            <h2 class="text-center text-4xl font-light text-[#814c59] tracking-wide uppercase">
+                Pedido Online
+            </h2>
+            <div class="h-1 w-20 bg-[#C27C3A] mt-2"></div>
+            <p class="mt-4 text-gray-500 italic">Selecciona tus favoritos y recoge en sucursal</p>
         </div>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="mb-6 p-4 rounded-2xl flex items-center gap-3 animate-fade 
-                {{ 'bg-red-50 text-red-700 border border-red-200' if category == 'danger' else 'bg-emerald-50 text-emerald-700 border border-emerald-200' }}">
-                <span class="font-bold text-sm">{{ message }}</span>
-              </div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            <div class="lg:col-span-2 space-y-6">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {% for p in lista_productos %}
-                    <div class="bg-white p-5 rounded-3xl shadow-sm border transition-all relative overflow-hidden {{ 'opacity-60 grayscale' if p.disponible_stock == 0 else 'hover:border-amber-200' }}">
-                        {% if p.disponible_stock == 0 %}
-                        <div class="absolute inset-0 z-10 flex items-center justify-center bg-white/40 backdrop-blur-[1px]">
-                            <span class="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">Agotado</span>
-                        </div>
+        <div class="fixed top-24 right-4 z-50 flex flex-col gap-3 w-80">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="flex items-center p-4 rounded-lg shadow-xl border-l-4 transform animate-bounce-short 
+                    {{ 'bg-red-50 border-red-500 text-red-800' if category == 'danger' else 'bg-white border-[#C27C3A] text-[#814c59]' }}">
+                    <div class="mr-3">
+                        {% if category == 'danger' %}
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/></svg>
+                        {% else %}
+                        <svg class="w-5 h-5 text-[#C27C3A]" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
                         {% endif %}
-                        <div class="flex gap-4 items-center">
-                            <div class="w-16 h-16 bg-amber-50 rounded-2xl flex-shrink-0 flex items-center justify-center text-amber-800">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                    </div>
+                    <p class="text-xs font-bold uppercase tracking-tight">{{ message }}</p>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <div class="lg:col-span-2">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                    {% for p in lista_productos %}
+                    <div class="flex flex-col items-center text-center group {{ 'opacity-50' if p.disponible_stock == 0 }}">
+                        <div class="overflow-hidden rounded-lg shadow-sm border border-gray-100 w-full relative">
+                            {% if p.disponible_stock == 0 %}
+                            <div class="absolute inset-0 z-10 flex items-center justify-center bg-black/10 backdrop-blur-[1px]">
+                                <span class="bg-[#814c59] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">Agotado</span>
                             </div>
-                            <div class="flex-grow">
-                                <span class="text-[10px] uppercase font-black text-amber-600 tracking-widest">{{ p.categoria or 'Café' }}</span>
-                                <h3 class="font-bold text-gray-800">{{ p.nombre }}</h3>
-                                <p class="text-amber-900 font-black">${{ p.precio_venta }}</p>
-                            </div>
+                            {% endif %}
+                            <img 
+                                src="{{ url_for('static', filename='img/productos/' + p.imagen) if p.imagen else url_for('static', filename='img/default.png') }}" 
+                                alt="{{ p.nombre }}"
+                                class="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105">
                         </div>
-                        <form method="POST" class="mt-4 flex gap-2">
+
+                        <p class="mt-4 text-xs uppercase tracking-widest text-[#C27C3A] font-bold">
+                            {{ p.categoria or 'Especialidad' }}
+                        </p>
+                        <h3 class="text-lg font-medium text-gray-800 uppercase tracking-tight">
+                            {{ p.nombre }}
+                        </h3>
+                        <p class="text-[#814c59] font-light text-xl mb-4">
+                            ${{ "{:,.2f}".format(p.precio_venta) }}
+                        </p>
+
+                        <form method="POST" class="w-full flex flex-col gap-2">
                             {{ form.hidden_tag() }}
                             <input type="hidden" name="producto" value="{{ p.id_producto }}">
                             <input type="hidden" name="nombre_prod" value="{{ p.nombre }}">
-                            <input type="number" name="cantidad" value="1" min="1" {{ 'disabled' if p.disponible_stock == 0 }} class="w-12 bg-gray-100 border-none rounded-xl text-center text-sm font-bold">
-                            <button type="submit" name="agregar" {{ 'disabled' if p.disponible_stock == 0 }} class="flex-grow py-2 rounded-xl text-sm font-bold bg-amber-800 text-white hover:bg-amber-900">Agregar</button>
+                            
+                            <div class="flex gap-2 justify-center">
+                                <input type="number" name="cantidad" value="1" min="1" 
+                                    class="w-16 border border-gray-200 rounded py-2 text-center text-sm focus:outline-none focus:border-[#C27C3A]"
+                                    {{ 'disabled' if p.disponible_stock == 0 }}>
+                                
+                                <button type="submit" name="agregar" 
+                                    class="bg-[#C27C3A] text-white px-6 py-2 rounded hover:bg-[#814c59] transition duration-300 uppercase text-xs font-bold tracking-widest"
+                                    {{ 'disabled' if p.disponible_stock == 0 }}>
+                                    Agregar
+                                </button>
+                            </div>
                         </form>
                     </div>
                     {% endfor %}
                 </div>
             </div>
 
-            <div class="space-y-6">
-                <div class="bg-white rounded-[2.5rem] shadow-xl border p-8 sticky top-8">
-                    <h2 class="text-xl font-black text-gray-800 mb-6">Tu Pedido</h2>
+            <div class="lg:col-span-1">
+                <div class="bg-white p-8 rounded-lg shadow-sm border border-gray-50 sticky top-10">
+                    <h2 class="text-xl font-light text-[#814c59] uppercase tracking-widest mb-6 border-b pb-4">
+                        Tu Selección
+                    </h2>
 
-                    <div class="space-y-4 mb-8 max-h-80 overflow-y-auto pr-2">
-    {% set carrito = session.get('carrito', []) %}
-    {% set total_carrito = 0 %}
-    {% for item in carrito %}
-        {% set subtotal_item = item.cantidad * item.precio %}
-        <div class="flex justify-between items-center group animate-fade border-b border-gray-50 pb-2">
-            <div class="flex items-center gap-3">
-                <span class="bg-amber-100 text-amber-800 w-6 h-6 flex items-center justify-center rounded-md font-bold text-[10px]">{{ item.cantidad }}x</span>
-                <div>
-                    <p class="text-gray-700 font-bold text-sm">{{ item.nombre }}</p>
-                    <p class="text-[10px] text-gray-400">${{ item.precio }} c/u</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-3">
-                <span class="text-amber-900 font-black text-sm">${{ "%.2f"|format(subtotal_item) }}</span>
-                <form method="POST" class="inline">
-                    {{ form.hidden_tag() }}
-                    <input type="hidden" name="item_index" value="{{ loop.index0 }}">
-                    <button type="submit" name="quitar" class="text-gray-300 hover:text-red-500 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
-                </form>
-            </div>
-        </div>
-    {% else %}
-        <p class="text-gray-400 text-sm text-center py-4 italic">No hay productos</p>
-    {% endfor %}
-</div>
+                    <div class="space-y-6 mb-8 max-h-96 overflow-y-auto pr-2">
+                        {% set carrito = session.get('carrito', []) %}
+                        {% if carrito %}
+                            {% for item in carrito %}
+                            <div class="flex justify-between items-start border-b border-gray-50 pb-4">
+                                <div>
+                                    <p class="text-sm font-bold text-gray-800 uppercase tracking-tighter">{{ item.nombre }}</p>
+                                    <p class="text-xs text-gray-400 italic">{{ item.cantidad }} x ${{ item.precio }}</p>
+                                </div>
+                                <div class="flex flex-col items-end gap-2">
+                                    <span class="text-[#814c59] font-medium text-sm">${{ "%.2f"|format(item.cantidad * item.precio) }}</span>
+                                    <form method="POST">
+                                        {{ form.hidden_tag() }}
+                                        <input type="hidden" name="item_index" value="{{ loop.index0 }}">
+                                        <button type="submit" name="quitar" class="text-gray-300 hover:text-red-400 transition-colors">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-10">
+                                <p class="text-gray-300 italic text-sm">Aún no has seleccionado nada.</p>
+                            </div>
+                        {% endif %}
+                    </div>
 
-                    <form method="POST" class="space-y-4 border-t pt-6">
+                    <form method="POST" class="space-y-6">
                         {{ form.hidden_tag() }}
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">Hora Recogida</label>
-                            <input type="datetime-local" name="hora_recogida" id="fecha_input" required class="w-full rounded-2xl border-gray-100 bg-gray-50 p-3 text-sm focus:ring-amber-500">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Hora de recogida (Hoy +1h mín.)</label>
+                            <input type="datetime-local" id="fecha_entrega" name="hora_recogida" required 
+                                class="w-full border-gray-100 bg-gray-50 rounded p-3 text-sm focus:ring-1 focus:ring-[#C27C3A] outline-none">
                         </div>
-                        <textarea name="notas" rows="2" placeholder="Notas adicionales..." class="w-full rounded-2xl border-gray-100 bg-gray-50 p-3 text-sm focus:ring-amber-500"></textarea>
-                        <button type="submit" name="terminar" value="True" {% if not carrito %}disabled{% endif %} class="w-full bg-amber-800 text-white py-4 rounded-2xl font-bold text-lg hover:bg-amber-900 transition-all shadow-xl shadow-amber-100 disabled:opacity-50">Finalizar Pedido</button>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Instrucciones</label>
+                            <textarea name="notas" rows="2" placeholder="Ej. Sin azúcar, bolsa de papel..." 
+                                class="w-full border-gray-100 bg-gray-50 rounded p-3 text-sm focus:ring-1 focus:ring-[#C27C3A] outline-none"></textarea>
+                        </div>
+                        
+                        <button type="submit" name="terminar" value="True" 
+                            {% if not carrito %}disabled{% endif %}
+                            class="w-full bg-[#814c59] text-white py-4 rounded font-bold uppercase tracking-widest text-xs hover:bg-[#C27C3A] transition-all duration-500 disabled:opacity-30 disabled:hover:bg-[#814c59]">
+                            Confirmar Orden
+                        </button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        const input = document.getElementById('fecha_input');
-        if(input){
+   <script> 
+   function configurarFechaMinima() {
+        const input = document.getElementById('fecha_entrega');
+        if (!input) return;
+
+        const ahora = new Date();
+        
+        const format = (date) => {
+            const anio = date.getFullYear();
+            const mes = String(date.getMonth() + 1).padStart(2, '0');
+            const dia = String(date.getDate()).padStart(2, '0');
+            const horas = String(date.getHours()).padStart(2, '0');
+            const minutos = String(date.getMinutes()).padStart(2, '0');
+            return `${anio}-${mes}-${dia}T${horas}:${minutos}`;
+        };
+
+        // --- CAMBIO PARA PRUEBAS ---
+        // Quitamos las restricciones de min y max para que el navegador no te bloquee
+        input.removeAttribute('min'); 
+        input.removeAttribute('max');
+        
+        // Ponemos por defecto la hora exacta de ahorita para que solo des clic en enviar
+        input.value = format(ahora); 
+    }
+    document.addEventListener('DOMContentLoaded', configurarFechaMinima);
+   /*comentado validacion dis hora 
+/*
+        function configurarFechaMinima() {
+            const input = document.getElementById('fecha_entrega');
+            if (!input) return;
+
             const ahora = new Date();
-            const offset = ahora.getTimezoneOffset() * 60000;
-            const localISOTime = (new Date(ahora - offset)).toISOString().slice(0, 16);
-            input.min = localISOTime;
-            input.max = localISOTime.split('T')[0] + "T23:59";
+            
+            // Regla: Mínimo 1 horas de anticipación
+            const minTime = new Date(ahora.getTime() + (1 * 60 * 60 * 1000));
+            
+            // Formatear para el input datetime-local (YYYY-MM-DDTHH:mm)
+            const format = (date) => {
+                const anio = date.getFullYear();
+                const mes = String(date.getMonth() + 1).padStart(2, '0');
+                const dia = String(date.getDate()).padStart(2, '0');
+                const horas = String(date.getHours()).padStart(2, '0');
+                const minutos = String(date.getMinutes()).padStart(2, '0');
+                return `${anio}-${mes}-${dia}T${horas}:${minutos}`;
+            };
+
+            // Establecer el mínimo (hoy + 2h)
+            input.min = format(minTime);
+            
+            // Establecer el máximo (hoy a las 9 PM)
+            const maxTime = new Date(ahora);
+            maxTime.setHours(21, 0, 0, 0); 
+            input.max = format(maxTime);
+
+            // Valor por defecto
+            input.value = format(minTime);
         }
-    </script>
-</body>
-</html>
+
+        document.addEventListener('DOMContentLoaded', configurarFechaMinima);
+*/
+</script>
+</section>
+{% endblock %}

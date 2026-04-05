@@ -1,82 +1,126 @@
-<script src="https://cdn.tailwindcss.com"></script>
+{% extends "layout/layout.html" %}
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6 bg-gray-50 min-h-screen">
-    <div class="lg:col-span-2">
-        <h1 class="text-2xl font-black text-gray-800 mb-6">Registro de Ventas - Urban Coffee</h1>
-
-        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-            {% for p in productos %}
-            <div class="bg-white p-4 rounded-[2rem] shadow-sm border border-gray-100 hover:shadow-md transition-all">
-                <div class="aspect-square bg-gray-100 rounded-[1.5rem] mb-4 overflow-hidden">
-                    <img src="{{ url_for('static', filename='img/productos/' + p.foto) if p.foto else '/static/img/productos/default.jpg' }}" class="object-cover w-full h-full">
-                </div>
-                <h3 class="font-bold text-gray-800 mb-1">{{ p.nombre }}</h3>
-                <div class="flex items-center justify-between">
-                    <span class="text-amber-900 font-black text-lg">${{ p.precio }}</span>
-                    <form method="POST">
-                        {{ form.hidden_tag() }}
-                        <input type="hidden" name="producto" value="{{ p.id_producto }}">
-                        <button type="submit" name="agregar" value="True" class="bg-amber-100 text-amber-900 p-3 rounded-2xl hover:bg-amber-200 transition-colors">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="3" d="M12 4v16m8-8H4"/></svg>
-                        </button>
-                    </form>
-                </div>
-            </div>
-            {% endfor %}
+{% block container %}
+<section class="bg-[#fdfcfb] min-h-screen">
+    <div class="w-full max-w-7xl mx-auto py-12 px-4">
+        
+        <div class="flex flex-col items-center mb-12">
+            <h2 class="text-center text-4xl font-light text-[#814c59] tracking-wide uppercase">
+                Punto de Venta Mostrador
+            </h2>
+            <div class="h-1 w-20 bg-[#C27C3A] mt-2"></div>
+            <p class="mt-4 text-gray-500 italic">Operador: {{ session.get('usuarioNombre', 'Usuario') }}</p>
         </div>
-    </div>
 
-    <div class="bg-white rounded-[2.5rem] shadow-xl p-8 flex flex-col h-[calc(100vh-50px)] sticky top-6">
-        <h2 class="text-xl font-black text-gray-800 mb-6 flex items-center">
-            <span class="mr-2">🛒</span> Orden Actual
-        </h2>
+        <div class="fixed top-24 right-4 z-50 flex flex-col gap-3 w-80">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="flex items-center p-4 rounded-lg shadow-xl border-l-4 transform animate-bounce-short 
+                    {{ 'bg-red-50 border-red-500 text-red-800' if category == 'danger' else 'bg-white border-[#C27C3A] text-[#814c59]' }}">
+                    <p class="text-xs font-bold uppercase tracking-tight">{{ message }}</p>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+        </div>
 
-        <div class="flex-grow overflow-y-auto space-y-4">
-            {% set ns = namespace(total=0) %}
-            {% if session.get('carrito') %}
-                {% for item in session.get('carrito') %}
-                <div class="bg-gray-50 p-5 rounded-[1.5rem] flex justify-between items-center relative">
-                    <div>
-                        <p class="font-bold text-gray-800">{{ item.nombre }}</p>
-                        <p class="text-xs text-gray-400 font-bold">CANT: {{ item.cantidad }} x ${{ item.precio }}</p>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <span class="font-black text-amber-900">${{ item.cantidad * item.precio }}</span>
-                        <form method="POST">
-                            {{ form.hidden_tag() }}
-                            <input type="hidden" name="item_index" value="{{ loop.index0 }}">
-                            <button type="submit" name="quitar" value="True" class="text-red-400 hover:text-red-600 transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            
+            <div class="lg:col-span-2">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+                    {% for producto in productos %}
+                    <div class="flex flex-col items-center text-center group">
+                        <div class="overflow-hidden rounded-lg shadow-sm border border-gray-100 w-full relative">
+                            <img 
+                                src="{{ url_for('static', filename='img/' + producto.imagen) if producto.imagen else url_for('static', filename='img/urbanCoffeeLogo.jpeg') }}" 
+                                alt="{{ producto.nombre }}"
+                                class="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-110">
+                        </div>
+
+                        <p class="mt-4 text-xs uppercase tracking-widest text-[#C27C3A] font-bold">
+                            {{ producto.categoria or 'Cafetería' }}
+                        </p>
+                        <h3 class="text-md font-medium text-gray-800 uppercase tracking-tight">
+                            {{ producto.nombre }}
+                        </h3>
+                        <p class="text-[#814c59] font-light text-lg mb-4">
+                            ${{ "{:,.2f}".format(producto.precio) }}
+                        </p>
+
+                        <form method="POST" class="w-full">
+                            <input type="hidden" name="producto_id" value="{{ producto.id_producto }}">
+                            <button type="submit" name="agregar" 
+                                class="w-full bg-[#C27C3A] text-white px-4 py-2 rounded hover:bg-[#814c59] transition duration-300 uppercase text-[10px] font-bold tracking-widest">
+                                AGREGAR +
                             </button>
                         </form>
                     </div>
+                    {% endfor %}
                 </div>
-                {% set ns.total = ns.total + (item.cantidad * item.precio) %}
-                {% endfor %}
-            {% else %}
-                <div class="text-center py-20 text-gray-300">
-                    <p class="font-bold italic">Carrito vacío</p>
+            </div>
+
+            <div class="lg:col-span-1">
+                <div class="bg-white p-8 rounded-lg shadow-sm border border-gray-100 sticky top-10">
+                    <h2 class="text-xl font-light text-[#814c59] uppercase tracking-widest mb-6 border-b pb-4 flex justify-between items-center">
+                        Carrito 
+                        <span class="text-xs font-bold bg-gray-100 px-2 py-1 rounded text-gray-500">{{ carrito|length }} items</span>
+                    </h2>
+
+                    <div class="space-y-4 mb-8 max-h-[50vh] overflow-y-auto pr-2">
+                        {% if carrito %}
+                            {% for item in carrito %}
+                            <div class="flex justify-between items-start border-b border-gray-50 pb-4">
+                                <div>
+                                    <p class="text-sm font-bold text-gray-800 uppercase tracking-tighter">{{ item.nombre }}</p>
+                                    <p class="text-xs text-gray-400 italic">
+                                        {{ item.cantidad }} x ${{ "{:,.2f}".format(item.precio) }}
+                                    </p>
+                                </div>
+                                <div class="flex flex-col items-end gap-2">
+                                    <span class="text-[#814c59] font-medium text-sm">
+                                        ${{ "{:,.2f}".format(item.precio * item.cantidad) }}
+                                    </span>
+                                    
+                                    <form method="POST">
+                                        <input type="hidden" name="item_index" value="{{ loop.index0 }}">
+                                        <button type="submit" name="quitar" class="text-gray-300 hover:text-red-500 transition-colors">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-10">
+                                <p class="text-gray-300 italic text-sm">No hay productos en la orden.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="pt-4 border-t-2 border-dashed border-gray-100">
+                        <div class="flex justify-between items-center mb-6">
+                            <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Total a pagar</span>
+                            <span class="text-3xl font-light text-[#814c59]">${{ "{:,.2f}".format(total) }}</span>
+                        </div>
+
+                        <form method="POST">
+                            <button type="submit" name="terminar" 
+                                {% if not carrito %} disabled {% endif %}
+                                class="w-full bg-[#814c59] text-white py-4 rounded font-bold uppercase tracking-widest text-xs hover:bg-[#C27C3A] transition-all duration-500 shadow-md disabled:opacity-30 disabled:shadow-none">
+                                Procesar Venta
+                            </button>
+                        </form>
+                        
+                        <p class="text-center text-[10px] text-gray-400 mt-4 uppercase tracking-tighter">
+                            Urban Coffee - Venta Presencial
+                        </p>
+                    </div>
                 </div>
-            {% endif %}
-        </div>
-
-       <div class="border-t border-gray-100 pt-6 mt-6">
-    <div class="flex justify-between mb-8">
-        <span class="text-gray-400 font-bold uppercase text-xs">Total a Pagar</span>
-        <span class="text-4xl font-black text-amber-900">${{ ns.total }}</span>
-    </div>
-
-    <form method="POST" action="{{ url_for('ventas.fisica') }}">
-        {{ form.hidden_tag() }} <button type="submit" 
-                name="terminar" 
-                value="True" 
-                class="w-full bg-[#3d2b1f] text-white py-5 rounded-[1.5rem] font-black text-xl hover:bg-black shadow-xl transition-all active:scale-95 disabled:bg-gray-200 disabled:text-gray-400"
-                {% if not session.get('carrito') %} disabled {% endif %}>
-            Confirmar y Pagar
-        </button>
-    </form>
-</div>
-            </form>
+            </div>
         </div>
     </div>
-</div>
+</section>
+{% endblock %}

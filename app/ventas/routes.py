@@ -3,9 +3,9 @@ from flask import Blueprint, flash, redirect, render_template, session, url_for,
 from model import db, Producto
 from forms import VentaForm, PagoForm
 from sqlalchemy import text, exc
+from datetime import datetime, timedelta
 
-from flask import request # <--- ASEGÚRATE DE TENER ESTA IMPORTACIÓN
-
+from flask import request
 
 ventasBp = Blueprint("ventas", __name__, url_prefix="/ventas")
 
@@ -40,13 +40,10 @@ def venta_fisica():
     form = VentaForm()
     productos = Producto.query.filter_by(estado=True).all()
     
-    # IMPORTANTE: Aseguramos que el formulario tenga las opciones cargadas
-    form.producto.choices = [(p.id_producto, p.nombre) for p in productos]
-
     if request.method == "POST":
-        # --- 🛒 1. ACCIÓN: AGREGAR AL CARRITO ---
+        
         if "agregar" in request.form:
-            p_id = request.form.get("producto", type=int)
+            p_id = request.form.get("producto_id", type=int)
             prod = Producto.query.get(p_id)
             if prod:
                 carrito = session.get("carrito", [])
@@ -60,7 +57,7 @@ def venta_fisica():
                 session.modified = True
             return redirect(url_for("ventas.fisica"))
 
-        # --- 🗑️ 2. ACCIÓN: QUITAR DEL CARRITO ---
+        # --- 2. QUITAR ---
         if "quitar" in request.form:
             idx = request.form.get("item_index", type=int)
             carrito = session.get("carrito", [])
@@ -70,78 +67,94 @@ def venta_fisica():
                 session.modified = True
             return redirect(url_for("ventas.fisica"))
 
-        # --- 💰 3. ACCIÓN: CONFIRMAR Y PAGAR (CORREGIDA PARA INOUT) ---
+        # --- 3. TERMINAR (Versión Anti-Duplicados) ---
         if "terminar" in request.form:
             carrito = session.get("carrito", [])
-            if not carrito:
+            if not carrito: 
                 return redirect(url_for("ventas.fisica"))
             
-            id_venta_tracker = 0
             try:
-                # 1. Inicializamos la variable en MySQL
-                db.session.execute(text("SET @id_v = :inicio"), {"inicio": id_venta_tracker})
-
+                id_venta_actual = 0
                 for item in carrito:
-                    # 2. Llamamos al procedimiento usando la variable @id_v de MySQL
-                    db.session.execute(
-                        text("""
-                            CALL crear_venta_general(
-                                :u, :c, :met, :tipo, :h, :n, :p, :can, @id_v
-                            )
-                        """),
+                    # Usamos parámetros limpios
+                    result = db.session.execute(
+                        text("CALL crear_venta_general(:u, :c, :tipo, :p, :can, :v_id)"),
                         {
-                            "u": session.get("usuarioId"), 
-                            "c": None, 
-                            "met": "Efectivo", 
-                            "tipo": "fisica", 
-                            "h": None, 
-                            "n": "Venta Mostrador",
-                            "p": item["id_producto"], 
-                            "can": item["cantidad"]
+                            "u": session.get("usuarioId"),
+                            "c": None,
+                            "tipo": "fisica",
+                            "p": item["id_producto"],
+                            "can": item["cantidad"],
+                            "v_id": id_venta_actual
                         }
                     )
-                
-                # 3. Recuperamos el ID final que generó la base de datos
-                res_id = db.session.execute(text("SELECT @id_v")).fetchone()
-                id_venta_final = res_id[0] if res_id else 0
+                    row = result.fetchone()
+                    if row:
+                        id_venta_actual = row[0]
 
                 db.session.commit()
-                session.pop("carrito", None)
                 
-                # Si se generó una venta, vamos al ticket
-                if id_venta_final > 0:
-                    return redirect(url_for("ventas.ticket", idVenta=id_venta_final))
-                else:
-                    flash("Error al recuperar el ID de venta", "danger")
-                    return redirect(url_for("ventas.fisica"))
+                # 1. Borramos el contenido del carrito
+                session["carrito"] = [] 
+                # 2. Eliminamos la llave por completo
+                session.pop("carrito", None) 
+                # 3. Forzamos a Flask a guardar este cambio de sesión AHORA
+                session.modified = True 
                 
-            except Exception as e:
-                db.session.rollback()
-                print(f"DEBUG ERROR: {str(e)}")
-                flash(f"Error en la base de datos: {str(e)}", "danger")
-                return redirect(url_for("ventas.fisica"))
+                return redirect(url_for("ventas.form_pagar", idVenta=id_venta_actual))
                 
             except Exception as e:
                 db.session.rollback()
-                print(f"DEBUG ERROR: {str(e)}")
                 flash(f"Error: {str(e)}", "danger")
                 return redirect(url_for("ventas.fisica"))
 
-    # Si es GET, solo mostramos la página
-    return render_template("ventas/fisica.html", form=form, productos=productos)
+    carrito = session.get("carrito", [])
+    total = sum(item['precio'] * item['cantidad'] for item in carrito)
+    return render_template("ventas/fisica.html", form=form, productos=productos, carrito=carrito, total=total)
+@ventasBp.route("/<int:idVenta>/pagar", methods=["GET", "POST"])
+@requiereRol("Operador") # Protegemos toda la transacción
+def pagar_venta_gestion(idVenta): # Cambiamos el nombre para que sea único
+    form = PagoForm()
+    
+    # 1. Si es GET: Mostramos el formulario de cobro
+    if request.method == "GET":
+        try:
+            # IMPORTANTE: "ventas" en minúscula como en tu PROCEDURE
+            result = db.session.execute(
+                text("SELECT total FROM ventas WHERE id_venta = :id"), 
+                {"id": idVenta}
+            ).fetchone()
+            
+            if not result:
+                flash("La venta no existe", "warning")
+                return redirect(url_for("ventas.fisica"))
+            
+            return render_template("ventas/pagar.html", 
+                                 form=form, 
+                                 idVenta=idVenta, 
+                                 total=result[0])
+        except Exception as e:
+            print(f"Error GET pagar: {e}")
+            return redirect(url_for("ventas.fisica"))
 
-@ventasBp.route("/<int:idVenta>/pagar", methods=["POST"], endpoint="pagar")
-@requiereRol("Operador")
-def pagar(idVenta):
+    # 2. Si es POST: Procesamos el pago (Cuando dan clic en Efectivo/Tarjeta)
     metodo = request.form.get("metodo_pago")
+    # notas = request.form.get("notas") # Por si lo necesitas luego
+    
     try:
-        # Llamamos al SP de pagar que actualiza el método de pago
-        db.session.execute(text("CALL pagar_venta(:id, :met)"), {"id": idVenta, "met": metodo})
+        # Ejecutamos el procedimiento que ya corregimos
+        db.session.execute(
+            text("CALL pagar_venta(:id, :met)"), 
+            {"id": idVenta, "met": metodo}
+        )
         db.session.commit()
+        
+        flash(f"¡Venta #{idVenta} pagada con éxito!", "success")
         return redirect(url_for("ventas.ticket", idVenta=idVenta))
+        
     except Exception as e:
         db.session.rollback()
-        flash(str(e), "danger")
+        flash(f"Error al procesar el pago: {str(e)}", "danger")
         return redirect(url_for("ventas.fisica"))
 
 @ventasBp.route("/online", methods=["GET", "POST"], endpoint="online")
@@ -149,7 +162,7 @@ def pagar(idVenta):
 def venta_online():
     form = VentaForm()
     
-    # CONSULTA MAESTRA: Verifica disponibilidad basada en materia prima
+    # Consulta de productos
     query_productos = text("""
         SELECT p.*, 
         CASE 
@@ -164,109 +177,75 @@ def venta_online():
     productos = db.session.execute(query_productos).fetchall()
 
     if request.method == "POST":
-        # --- 🗑️ QUITAR DEL CARRITO ---
+        # --- QUITAR DEL CARRITO ---
         if "quitar" in request.form:
             index = request.form.get("item_index", type=int)
             carrito = session.get("carrito", [])
             if 0 <= index < len(carrito):
-                eliminado = carrito.pop(index)
+                carrito.pop(index)
                 session["carrito"] = carrito
                 session.modified = True
-                flash(f"Se quitó {eliminado['nombre']}", "info")
             return redirect(url_for("ventas.online"))
 
-        # --- 🛒 AGREGAR AL CARRITO ---
+        # --- AGREGAR AL CARRITO ---
         if "agregar" in request.form:
             prod_id = request.form.get("producto")
             cant = request.form.get("cantidad", type=int, default=1)
             nombre = request.form.get("nombre_prod")
-            
-            # Buscar el precio en la lista de productos actual
             prod_actual = next((p for p in productos if str(p.id_producto) == prod_id), None)
-            precio = float(prod_actual.precio_venta) if prod_actual else 0
+            
+            if prod_actual and prod_actual.disponible_stock == 0:
+                flash(f"Agotado: {nombre}", "danger")
+                return redirect(url_for("ventas.online"))
 
             carrito = session.get("carrito", [])
             carrito.append({
                 "id_producto": int(prod_id), 
                 "cantidad": cant, 
                 "nombre": nombre,
-                "precio": precio # Guardamos el precio para el HTML
+                "precio": float(prod_actual.precio_venta) if prod_actual else 0 
             })
             session["carrito"] = carrito
             session.modified = True
-            flash(f"{nombre} agregado", "success")
+            flash(f"¡{nombre} añadido!", "success")
             return redirect(url_for("ventas.online"))
 
-        # --- 💰 FINALIZAR PEDIDO (Llamada al SP) ---
+        # --- FINALIZAR PEDIDO (MODO PRUEBA) ---
         if "terminar" in request.form:
             carrito = session.get("carrito", [])
             if not carrito:
-                flash("El carrito está vacío", "danger")
+                flash("Carrito vacío", "warning")
                 return redirect(url_for("ventas.online"))
 
-            # 1. Validar que existan los IDs necesarios en la sesión
+            hora_recogida_raw = request.form.get("hora_recogida")
             u_id = session.get("usuarioId")
             c_id = session.get("clienteId")
 
-            if u_id is None:
-                # Si el usuarioId 3 no existe en la tabla 'usuario', este es el problema.
-                flash("Error de sesión: No se encontró un ID de usuario válido. Reintenta iniciar sesión.", "danger")
-                return redirect(url_for("auth.iniciarSesion"))
-
             id_venta_tracker = 0 
-            
             try:
                 for item in carrito:
-                    # Ejecutamos el procedimiento
                     result = db.session.execute(
                         text("CALL crear_venta_online(:u, :c, :h, :n, :p, :can, :v_ex)"),
                         {
-                            "u": u_id, 
-                            "c": c_id, 
-                            "h": request.form.get("hora_recogida"), 
-                            "n": request.form.get("notas"),
-                            "p": item["id_producto"], 
-                            "can": item["cantidad"], 
+                            "u": u_id, "c": c_id, "h": hora_recogida_raw, 
+                            "n": request.form.get("notas", ""),
+                            "p": item["id_producto"], "can": item["cantidad"], 
                             "v_ex": id_venta_tracker
                         }
                     ).fetchone()
-                    
-                    if result:
-                        id_venta_tracker = result[0]
+                    if result: id_venta_tracker = result[0]
                 
                 db.session.commit()
                 session.pop("carrito", None)
-                flash("¡Orden enviada con éxito! Te esperamos en sucursal.", "success")
-                return redirect(url_for("ventas.online"))
-
-            except exc.IntegrityError as e:
-                db.session.rollback()
-                # Este captura el error de la llave foránea (id_usuario 3 no existe)
-                flash(f"Error de Integridad: El usuario registrado ({u_id}) no es válido en el sistema de ventas.", "danger")
-                print(f"DEBUG FK ERROR: {str(e)}") # Esto lo verás en tu consola
-                
-            except exc.InternalError as e:
-                db.session.rollback()
-                # Este captura los SIGNAL de MySQL (Fecha, Stock, etc.)
-                error_msg = str(e.orig).split("'")[1] if "'" in str(e.orig) else "Error en la validación del pedido"
-                flash(f"Validación: {error_msg}", "warning")
-                
+                flash("¡Pedido confirmado!", "success")
             except Exception as e:
                 db.session.rollback()
-                # Error genérico para cualquier otra cosa
-                flash(f"Error inesperado: {str(e)}", "danger")
+                # Esto te dirá el error real que escupe la base de datos
+                flash(f"Error: {str(e)}", "danger")
             
             return redirect(url_for("ventas.online"))
 
     return render_template("ventas/online.html", form=form, lista_productos=productos)
-
-# 💰 FORM PAGAR (OPERADOR / GERENTE)
-@ventasBp.route("/<int:idVenta>/pagar", methods=["GET"], endpoint="form_pagar")
-def form_pagar(idVenta):
-    form = PagoForm()
-    # Obtenemos el total de la base de datos para mostrarlo en el cuadro gris
-    venta = db.session.execute(text("SELECT total FROM Ventas WHERE id_venta = :id"), {"id": idVenta}).fetchone()
-    return render_template("ventas/pagar.html", form=form, idVenta=idVenta, total=venta.total if venta else 0)
 
 
 
